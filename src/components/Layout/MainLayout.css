@@ -1,0 +1,16 @@
+.main-layout {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.main-layout-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.main-layout-content {
+  flex: 1;
+  overflow: hidden;
+}

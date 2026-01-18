@@ -1,0 +1,138 @@
+.file-list {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #f8f9fa;
+  border-right: 1px solid #dee2e6;
+}
+
+.file-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #dee2e6;
+  background-color: #fff;
+}
+
+.file-list-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.file-create-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background-color: #667eea;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.file-create-btn:hover {
+  background-color: #5a6fd6;
+}
+
+.file-create-btn:active {
+  background-color: #4e61c2;
+}
+
+.file-list-items {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.file-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  color: #495057;
+}
+
+.file-list-item:hover {
+  background-color: #e9ecef;
+}
+
+.file-list-item.active {
+  background-color: #667eea;
+  color: #fff;
+}
+
+.file-list-item.active:hover {
+  background-color: #5a6fd6;
+}
+
+.file-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.file-name {
+  flex: 1;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-name-input {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid #667eea;
+  border-radius: 4px;
+  font-size: 13px;
+  outline: none;
+}
+
+.file-delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background-color: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.file-list-item:hover .file-delete-btn {
+  opacity: 0.6;
+}
+
+.file-list-item:hover .file-delete-btn:hover {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.file-list-item.active .file-delete-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.file-list-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #6c757d;
+  font-size: 14px;
+}
