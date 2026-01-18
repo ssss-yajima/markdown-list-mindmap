@@ -127,6 +127,31 @@ export function addSiblingNode(
 }
 
 /**
+ * 兄弟ノードを追加（指定ノードの直前に挿入）
+ * @returns 新しいツリーと追加されたノードのID
+ */
+export function addSiblingNodeBefore(
+  items: ListItem[],
+  siblingId: string,
+  text: string = '新しいノード'
+): { items: ListItem[]; newNodeId: string } {
+  const newItems = cloneTree(items);
+  const result = findSiblings(newItems, siblingId);
+
+  if (!result) {
+    throw new Error(`Sibling node not found: ${siblingId}`);
+  }
+
+  const { siblings, index } = result;
+  const sibling = siblings[index];
+  const newNode = createNode(text, sibling.level, sibling.listType);
+
+  siblings.splice(index, 0, newNode);
+
+  return { items: newItems, newNodeId: newNode.id };
+}
+
+/**
  * ノードを削除
  * @returns 新しいツリー
  */

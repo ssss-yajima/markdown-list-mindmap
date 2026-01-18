@@ -10,6 +10,7 @@ import { storage } from '../utils/storage';
 import {
   addChildNode as treeAddChild,
   addSiblingNode as treeAddSibling,
+  addSiblingNodeBefore as treeAddSiblingBefore,
   deleteNode as treeDelete,
   updateNodeText as treeUpdateText,
 } from '../utils/treeOperations';
@@ -36,6 +37,7 @@ interface MindMapState {
   setEditingNodeId: (nodeId: string | null) => void;
   addChildNode: (parentId: string, text?: string) => string | null;
   addSiblingNode: (siblingId: string, text?: string) => string | null;
+  addSiblingNodeBefore: (siblingId: string, text?: string) => string | null;
   deleteNode: (nodeId: string) => void;
   updateNodeText: (nodeId: string, text: string) => void;
 }
@@ -284,7 +286,7 @@ export const useMindMapStore = create<MindMapState>((set, get) => ({
         text
       );
 
-      const result = regenerateFromTree(newItems, metadata, true);
+      const result = regenerateFromTree(newItems, metadata, false);
 
       set({
         ...result,
@@ -311,7 +313,7 @@ export const useMindMapStore = create<MindMapState>((set, get) => ({
         text
       );
 
-      const result = regenerateFromTree(newItems, metadata, true);
+      const result = regenerateFromTree(newItems, metadata, false);
 
       set({
         ...result,
@@ -323,6 +325,33 @@ export const useMindMapStore = create<MindMapState>((set, get) => ({
       return newNodeId;
     } catch {
       console.error('Failed to add sibling node');
+      return null;
+    }
+  },
+
+  addSiblingNodeBefore: (siblingId: string, text: string = '新しいノード') => {
+    const { parsed, metadata } = get();
+    if (!parsed) return null;
+
+    try {
+      const { items: newItems, newNodeId } = treeAddSiblingBefore(
+        parsed.items,
+        siblingId,
+        text
+      );
+
+      const result = regenerateFromTree(newItems, metadata, false);
+
+      set({
+        ...result,
+        selectedNodeId: newNodeId,
+        editingNodeId: newNodeId,
+      });
+
+      get().saveToStorage();
+      return newNodeId;
+    } catch {
+      console.error('Failed to add sibling node before');
       return null;
     }
   },

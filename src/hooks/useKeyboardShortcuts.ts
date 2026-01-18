@@ -19,6 +19,7 @@ export function useKeyboardShortcuts() {
     setEditingNodeId,
     addChildNode,
     addSiblingNode,
+    addSiblingNodeBefore,
     deleteNode,
   } = useMindMapStore();
 
@@ -52,7 +53,11 @@ export function useKeyboardShortcuts() {
 
         case 'Enter':
           e.preventDefault();
-          addSiblingNode(selectedNodeId);
+          if (e.shiftKey) {
+            addSiblingNodeBefore(selectedNodeId); // 上に追加
+          } else {
+            addSiblingNode(selectedNodeId); // 下に追加
+          }
           break;
 
         case 'Backspace':
@@ -84,6 +89,7 @@ export function useKeyboardShortcuts() {
       setEditingNodeId,
       addChildNode,
       addSiblingNode,
+      addSiblingNodeBefore,
       deleteNode,
     ]
   );

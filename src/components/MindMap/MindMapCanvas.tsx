@@ -69,10 +69,11 @@ export function MindMapCanvas() {
         setSelectedNodeId(selectedNodes[0].id);
       } else if (selectedNodes.length === 0) {
         setSelectedNodeId(null);
-        setEditingNodeId(null);
+        // 編集中のノードがある場合はeditingNodeIdを維持（新ノード作成直後など）
+        // paneClickで明示的にクリアされる
       }
     },
-    [setSelectedNodeId, setEditingNodeId]
+    [setSelectedNodeId]
   );
 
   const onPaneClick = useCallback(() => {
@@ -106,6 +107,9 @@ export function MindMapCanvas() {
           type: 'bezier',
         }}
         selectNodesOnDrag={false}
+        deleteKeyCode={null}
+        selectionKeyCode={null}
+        disableKeyboardA11y={true}
       >
         <Controls />
         <MiniMap />
