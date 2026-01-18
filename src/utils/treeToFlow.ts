@@ -35,7 +35,7 @@ export function treeToFlow(
         id: `edge-${parentId}-${item.id}`,
         source: parentId,
         target: item.id,
-        type: 'smoothstep',
+        type: 'bezier',
       });
     }
 

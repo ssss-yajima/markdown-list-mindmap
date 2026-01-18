@@ -1,11 +1,18 @@
 import { create } from 'zustand';
 import type { XYPosition } from '@xyflow/react';
 import type { MindMapNode, MindMapEdge, MindMapMetadata } from '../types/mindMap';
-import type { ParsedMarkdown } from '../types/markdown';
-import { parseMarkdown } from '../utils/markdownParser';
+import type { ParsedMarkdown, ListItem } from '../types/markdown';
+import { parseAndEnsureIds } from '../utils/markdownParser';
 import { treeToFlow } from '../utils/treeToFlow';
 import { calculateLayout } from '../utils/layoutEngine';
+import { treeToMarkdown } from '../utils/treeToMarkdown';
 import { storage } from '../utils/storage';
+import {
+  addChildNode as treeAddChild,
+  addSiblingNode as treeAddSibling,
+  deleteNode as treeDelete,
+  updateNodeText as treeUpdateText,
+} from '../utils/treeOperations';
 
 interface MindMapState {
   markdown: string;
@@ -13,6 +20,8 @@ interface MindMapState {
   parsed: ParsedMarkdown | null;
   nodes: MindMapNode[];
   edges: MindMapEdge[];
+  selectedNodeId: string | null;
+  editingNodeId: string | null;
 
   setMarkdown: (markdown: string) => void;
   updateNodePosition: (nodeId: string, position: XYPosition) => void;
@@ -20,6 +29,14 @@ interface MindMapState {
   recalculateLayout: () => void;
   loadFromStorage: () => void;
   saveToStorage: () => void;
+
+  // 新しいアクション（双方向同期用）
+  setSelectedNodeId: (nodeId: string | null) => void;
+  setEditingNodeId: (nodeId: string | null) => void;
+  addChildNode: (parentId: string, text?: string) => string | null;
+  addSiblingNode: (siblingId: string, text?: string) => string | null;
+  deleteNode: (nodeId: string) => void;
+  updateNodeText: (nodeId: string, text: string) => void;
 }
 
 const INITIAL_METADATA: MindMapMetadata = {
@@ -40,15 +57,50 @@ const SAMPLE_MARKDOWN = `- プロジェクト計画
   - 人員
   - 予算`;
 
+/**
+ * ツリーからマークダウンとReact Flowデータを再生成するヘルパー
+ */
+function regenerateFromTree(
+  items: ListItem[],
+  metadata: MindMapMetadata,
+  preservePositions: boolean = false
+): {
+  markdown: string;
+  parsed: ParsedMarkdown;
+  metadata: MindMapMetadata;
+  nodes: MindMapNode[];
+  edges: MindMapEdge[];
+} {
+  const markdown = treeToMarkdown(items);
+  const parsed: ParsedMarkdown = { items, rawText: markdown };
+
+  const updatedNodeMetadata = preservePositions
+    ? calculateLayout(items, metadata.nodeMetadata)
+    : calculateLayout(items, {});
+
+  const updatedMetadata: MindMapMetadata = {
+    ...metadata,
+    nodeMetadata: updatedNodeMetadata,
+    lastModified: Date.now(),
+  };
+
+  const { nodes, edges } = treeToFlow(parsed, updatedMetadata);
+
+  return { markdown, parsed, metadata: updatedMetadata, nodes, edges };
+}
+
 export const useMindMapStore = create<MindMapState>((set, get) => ({
   markdown: '',
   metadata: INITIAL_METADATA,
   parsed: null,
   nodes: [],
   edges: [],
+  selectedNodeId: null,
+  editingNodeId: null,
 
   setMarkdown: (markdown: string) => {
-    const parsed = parseMarkdown(markdown);
+    const { parsed, markdownWithIds, hasChanges } = parseAndEnsureIds(markdown);
+    const finalMarkdown = hasChanges ? markdownWithIds : markdown;
     const { metadata } = get();
 
     const updatedNodeMetadata = calculateLayout(
@@ -65,7 +117,7 @@ export const useMindMapStore = create<MindMapState>((set, get) => ({
     const { nodes, edges } = treeToFlow(parsed, updatedMetadata);
 
     set({
-      markdown,
+      markdown: finalMarkdown,
       parsed,
       metadata: updatedMetadata,
       nodes,
@@ -161,18 +213,22 @@ export const useMindMapStore = create<MindMapState>((set, get) => ({
   loadFromStorage: () => {
     const data = storage.load();
     if (data) {
-      const parsed = parseMarkdown(data.markdown);
+      const { parsed, markdownWithIds, hasChanges } = parseAndEnsureIds(data.markdown);
+      const finalMarkdown = hasChanges ? markdownWithIds : data.markdown;
       const { nodes, edges } = treeToFlow(parsed, data.metadata);
 
       set({
-        markdown: data.markdown,
+        markdown: finalMarkdown,
         metadata: data.metadata,
         parsed,
         nodes,
         edges,
       });
+
+      if (hasChanges) {
+        get().saveToStorage();
+      }
     } else {
-      // 初回はサンプルデータをセット
       get().setMarkdown(SAMPLE_MARKDOWN);
     }
   },
@@ -180,5 +236,117 @@ export const useMindMapStore = create<MindMapState>((set, get) => ({
   saveToStorage: () => {
     const { markdown, metadata } = get();
     storage.save({ markdown, metadata });
+  },
+
+  // 新しいアクション
+  setSelectedNodeId: (nodeId: string | null) => {
+    set({ selectedNodeId: nodeId });
+  },
+
+  setEditingNodeId: (nodeId: string | null) => {
+    set({ editingNodeId: nodeId });
+  },
+
+  addChildNode: (parentId: string, text: string = '新しいノード') => {
+    const { parsed, metadata } = get();
+    if (!parsed) return null;
+
+    try {
+      const { items: newItems, newNodeId } = treeAddChild(
+        parsed.items,
+        parentId,
+        text
+      );
+
+      const result = regenerateFromTree(newItems, metadata, true);
+
+      set({
+        ...result,
+        selectedNodeId: newNodeId,
+        editingNodeId: newNodeId,
+      });
+
+      get().saveToStorage();
+      return newNodeId;
+    } catch {
+      console.error('Failed to add child node');
+      return null;
+    }
+  },
+
+  addSiblingNode: (siblingId: string, text: string = '新しいノード') => {
+    const { parsed, metadata } = get();
+    if (!parsed) return null;
+
+    try {
+      const { items: newItems, newNodeId } = treeAddSibling(
+        parsed.items,
+        siblingId,
+        text
+      );
+
+      const result = regenerateFromTree(newItems, metadata, true);
+
+      set({
+        ...result,
+        selectedNodeId: newNodeId,
+        editingNodeId: newNodeId,
+      });
+
+      get().saveToStorage();
+      return newNodeId;
+    } catch {
+      console.error('Failed to add sibling node');
+      return null;
+    }
+  },
+
+  deleteNode: (nodeId: string) => {
+    const { parsed, metadata, nodes } = get();
+    if (!parsed) return;
+
+    // 削除後に選択するノードを決定（前の兄弟 or 親）
+    const currentIndex = nodes.findIndex((n) => n.id === nodeId);
+    let nextSelectedId: string | null = null;
+
+    if (currentIndex > 0) {
+      nextSelectedId = nodes[currentIndex - 1].id;
+    } else if (nodes.length > 1) {
+      nextSelectedId = nodes[1].id;
+    }
+
+    try {
+      const newItems = treeDelete(parsed.items, nodeId);
+      const result = regenerateFromTree(newItems, metadata, true);
+
+      set({
+        ...result,
+        selectedNodeId: nextSelectedId,
+        editingNodeId: null,
+      });
+
+      get().saveToStorage();
+    } catch {
+      console.error('Failed to delete node');
+    }
+  },
+
+  updateNodeText: (nodeId: string, text: string) => {
+    const { parsed, metadata } = get();
+    if (!parsed) return;
+
+    try {
+      const newItems = treeUpdateText(parsed.items, nodeId, text);
+      const result = regenerateFromTree(newItems, metadata, true);
+
+      set({
+        ...result,
+        editingNodeId: null,
+      });
+
+      get().saveToStorage();
+    } catch {
+      console.error('Failed to update node text');
+    }
   },
 }));

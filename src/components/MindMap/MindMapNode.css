@@ -7,6 +7,7 @@
   max-width: 250px;
   cursor: grab;
   transition: all 0.15s ease;
+  position: relative;
 }
 
 .mindmap-node:hover {
@@ -14,9 +15,17 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.mindmap-node:hover .add-child-button {
+  opacity: 1;
+}
+
 .mindmap-node.selected {
   border-color: #3b82f6;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.mindmap-node.editing {
+  cursor: default;
 }
 
 .mindmap-node.level-0 {
@@ -25,6 +34,23 @@
   font-weight: 600;
   font-size: 15px;
   border: none;
+}
+
+.mindmap-node.level-0 .add-child-button {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.mindmap-node.level-0 .add-child-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.mindmap-node.level-0 .expand-button {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.mindmap-node.level-0 .expand-button:hover {
+  color: white;
 }
 
 .mindmap-node.level-1 {
@@ -43,16 +69,70 @@
   gap: 6px;
 }
 
-.expand-icon {
+.expand-button {
   font-size: 10px;
   opacity: 0.6;
   cursor: pointer;
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
-.expand-icon:hover {
+.expand-button:hover {
   opacity: 1;
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .node-label {
   word-break: break-word;
+  flex: 1;
+  min-width: 0;
+}
+
+.node-input {
+  flex: 1;
+  min-width: 80px;
+  padding: 2px 6px;
+  border: 1px solid #3b82f6;
+  border-radius: 3px;
+  font-size: inherit;
+  font-family: inherit;
+  outline: none;
+  background: white;
+}
+
+.node-input:focus {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.add-child-button {
+  opacity: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: #e2e8f0;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.add-child-button:hover {
+  background: #3b82f6;
+  color: white;
+  transform: scale(1.1);
+}
+
+.mindmap-node.selected .add-child-button {
+  opacity: 1;
 }
