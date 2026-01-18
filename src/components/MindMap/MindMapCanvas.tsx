@@ -24,8 +24,8 @@ interface CanvasSettings {
 }
 
 export const CanvasSettingsContext = createContext<CanvasSettings>({
-  nodeStyle: 'underline',
-  fontStyle: 'handwriting',
+  nodeStyle: 'none',
+  fontStyle: 'system',
 });
 
 export const useCanvasSettings = () => useContext(CanvasSettingsContext);

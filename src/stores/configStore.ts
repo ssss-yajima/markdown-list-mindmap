@@ -17,9 +17,9 @@ interface ConfigState {
 export const useConfigStore = create<ConfigState>()(
   persist(
     (set) => ({
-      backgroundStyle: 'ruled',
-      nodeStyle: 'underline',
-      fontStyle: 'handwriting',
+      backgroundStyle: 'grid',
+      nodeStyle: 'none',
+      fontStyle: 'system',
       setBackgroundStyle: (style) => set({ backgroundStyle: style }),
       setNodeStyle: (style) => set({ nodeStyle: style }),
       setFontStyle: (style) => set({ fontStyle: style }),
