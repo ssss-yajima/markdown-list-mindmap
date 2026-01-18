@@ -4,7 +4,7 @@ import type { MindMapNode, MindMapEdge, MindMapMetadata, StoredData } from '../t
 import type { ParsedMarkdown, ListItem } from '../types/markdown';
 import { parseAndEnsureIds, syncMarkdownWithTree } from '../utils/markdownParser';
 import { treeToFlow } from '../utils/treeToFlow';
-import { calculateLayout } from '../utils/layoutEngine';
+import { calculateLayout, resolveOverlaps, buildContentMapFromItems } from '../utils/layoutEngine';
 import { treeToMarkdown } from '../utils/treeToMarkdown';
 import { fileStorage } from '../utils/storage';
 import {
@@ -86,8 +86,9 @@ function regenerateFromTree(
   const displayMarkdown = treeToMarkdown(items, { embedIds: false });
   const parsed: ParsedMarkdown = { items, rawText: markdown };
 
+  const contentMap = buildContentMapFromItems(items);
   const updatedNodeMetadata = preservePositions
-    ? calculateLayout(items, metadata.nodeMetadata)
+    ? resolveOverlaps(calculateLayout(items, metadata.nodeMetadata), contentMap)
     : calculateLayout(items, {});
 
   const updatedMetadata: MindMapMetadata = {
@@ -136,9 +137,11 @@ export const useMindMapStore = create<MindMapState>((set, get) => ({
     // 表示用マークダウンを生成（IDなし）
     const displayMarkdown = treeToMarkdown(parsed.items, { embedIds: false });
 
+    // 新規入力かどうかを判定して、初期レイアウトでは空のメタデータを渡す
+    const isNewInput = !hasIds && Object.keys(metadata.nodeMetadata).length === 0;
     const updatedNodeMetadata = calculateLayout(
       parsed.items,
-      metadata.nodeMetadata
+      isNewInput ? {} : metadata.nodeMetadata
     );
 
     const updatedMetadata: MindMapMetadata = {
@@ -165,17 +168,21 @@ export const useMindMapStore = create<MindMapState>((set, get) => ({
     const { metadata, parsed } = get();
     if (!parsed) return;
 
+    // 位置更新後に衝突解消を実行
+    const contentMap = buildContentMapFromItems(parsed.items);
+    const updatedNodeMetadata = resolveOverlaps({
+      ...metadata.nodeMetadata,
+      [nodeId]: {
+        ...metadata.nodeMetadata[nodeId],
+        id: nodeId,
+        position,
+        expanded: metadata.nodeMetadata[nodeId]?.expanded ?? true,
+      },
+    }, contentMap);
+
     const updatedMetadata: MindMapMetadata = {
       ...metadata,
-      nodeMetadata: {
-        ...metadata.nodeMetadata,
-        [nodeId]: {
-          ...metadata.nodeMetadata[nodeId],
-          id: nodeId,
-          position,
-          expanded: metadata.nodeMetadata[nodeId]?.expanded ?? true,
-        },
-      },
+      nodeMetadata: updatedNodeMetadata,
       lastModified: Date.now(),
     };
 
