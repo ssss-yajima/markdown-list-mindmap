@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 import type { XYPosition } from '@xyflow/react';
-import type { MindMapNode, MindMapEdge, MindMapMetadata } from '../types/mindMap';
+import type { MindMapNode, MindMapEdge, MindMapMetadata, StoredData } from '../types/mindMap';
 import type { ParsedMarkdown, ListItem } from '../types/markdown';
 import { parseAndEnsureIds, syncMarkdownWithTree } from '../utils/markdownParser';
 import { treeToFlow } from '../utils/treeToFlow';
 import { calculateLayout } from '../utils/layoutEngine';
 import { treeToMarkdown } from '../utils/treeToMarkdown';
-import { storage } from '../utils/storage';
+import { fileStorage } from '../utils/storage';
 import {
   addChildNode as treeAddChild,
   addSiblingNode as treeAddSibling,
@@ -24,6 +24,7 @@ interface MindMapState {
   edges: MindMapEdge[];
   selectedNodeId: string | null;
   editingNodeId: string | null;
+  activeFileId: string | null; // 現在編集中のファイルID
 
   setMarkdown: (markdown: string) => void;
   updateNodePosition: (nodeId: string, position: XYPosition) => void;
@@ -31,6 +32,12 @@ interface MindMapState {
   recalculateLayout: () => void;
   loadFromStorage: () => void;
   saveToStorage: () => void;
+
+  // 複数ファイル対応
+  loadFileData: (fileId: string) => void;
+  getFileData: () => StoredData;
+  saveActiveFile: () => void;
+  resetToDefault: () => void;
 
   // 新しいアクション（双方向同期用）
   setSelectedNodeId: (nodeId: string | null) => void;
@@ -103,6 +110,7 @@ export const useMindMapStore = create<MindMapState>((set, get) => ({
   edges: [],
   selectedNodeId: null,
   editingNodeId: null,
+  activeFileId: null,
 
   setMarkdown: (markdown: string) => {
     const { parsed: existingParsed, metadata } = get();
@@ -237,7 +245,16 @@ export const useMindMapStore = create<MindMapState>((set, get) => ({
   },
 
   loadFromStorage: () => {
-    const data = storage.load();
+    // 後方互換性: 直接呼ばれた場合は何もしない（loadFileDataを使用）
+  },
+
+  saveToStorage: () => {
+    // 後方互換性: saveActiveFileを呼び出す
+    get().saveActiveFile();
+  },
+
+  loadFileData: (fileId: string) => {
+    const data = fileStorage.loadFileData(fileId);
     if (data) {
       const { parsed, markdownWithIds, hasChanges } = parseAndEnsureIds(data.markdown);
       const finalMarkdown = hasChanges ? markdownWithIds : data.markdown;
@@ -251,19 +268,38 @@ export const useMindMapStore = create<MindMapState>((set, get) => ({
         parsed,
         nodes,
         edges,
+        activeFileId: fileId,
+        selectedNodeId: null,
+        editingNodeId: null,
       });
 
       if (hasChanges) {
-        get().saveToStorage();
+        get().saveActiveFile();
       }
     } else {
-      get().setMarkdown(SAMPLE_MARKDOWN);
+      // ファイルデータがない場合はデフォルト状態で初期化
+      set({ activeFileId: fileId });
+      get().resetToDefault();
     }
   },
 
-  saveToStorage: () => {
+  getFileData: () => {
     const { markdown, metadata } = get();
-    storage.save({ markdown, metadata });
+    return { markdown, metadata };
+  },
+
+  saveActiveFile: () => {
+    const { activeFileId, markdown, metadata } = get();
+    if (activeFileId) {
+      fileStorage.saveFileData(activeFileId, { markdown, metadata });
+    }
+  },
+
+  resetToDefault: () => {
+    // 既存のparsedをクリアしてから新しいマークダウンを設定
+    // これにより、syncMarkdownWithTreeが既存のIDを再利用しないようにする
+    set({ parsed: null });
+    get().setMarkdown(SAMPLE_MARKDOWN);
   },
 
   // 新しいアクション
