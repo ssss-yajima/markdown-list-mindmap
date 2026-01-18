@@ -30,7 +30,7 @@
   padding: 16px;
   border: none;
   resize: none;
-  font-family: var(--font-handwriting);
+  font-family: var(--font-system);
   font-size: 14px;
   line-height: 1.8;
   color: var(--color-text-primary);

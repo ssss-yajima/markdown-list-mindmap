@@ -11,6 +11,12 @@
   color: var(--color-text-primary);
 }
 
+/* Hide connection handles */
+.mindmap-node .react-flow__handle {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* Font styles */
 .mindmap-node.font-handwriting {
   font-family: var(--font-handwriting);
