@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { XYPosition } from '@xyflow/react';
 import type { MindMapNode, MindMapEdge, MindMapMetadata } from '../types/mindMap';
 import type { ParsedMarkdown, ListItem } from '../types/markdown';
-import { parseAndEnsureIds } from '../utils/markdownParser';
+import { parseAndEnsureIds, syncMarkdownWithTree } from '../utils/markdownParser';
 import { treeToFlow } from '../utils/treeToFlow';
 import { calculateLayout } from '../utils/layoutEngine';
 import { treeToMarkdown } from '../utils/treeToMarkdown';
@@ -15,7 +15,8 @@ import {
 } from '../utils/treeOperations';
 
 interface MindMapState {
-  markdown: string;
+  markdown: string;           // 内部用（IDコメントあり）
+  displayMarkdown: string;    // 表示用（IDコメントなし）
   metadata: MindMapMetadata;
   parsed: ParsedMarkdown | null;
   nodes: MindMapNode[];
@@ -66,12 +67,14 @@ function regenerateFromTree(
   preservePositions: boolean = false
 ): {
   markdown: string;
+  displayMarkdown: string;
   parsed: ParsedMarkdown;
   metadata: MindMapMetadata;
   nodes: MindMapNode[];
   edges: MindMapEdge[];
 } {
-  const markdown = treeToMarkdown(items);
+  const markdown = treeToMarkdown(items, { embedIds: true });
+  const displayMarkdown = treeToMarkdown(items, { embedIds: false });
   const parsed: ParsedMarkdown = { items, rawText: markdown };
 
   const updatedNodeMetadata = preservePositions
@@ -86,11 +89,12 @@ function regenerateFromTree(
 
   const { nodes, edges } = treeToFlow(parsed, updatedMetadata);
 
-  return { markdown, parsed, metadata: updatedMetadata, nodes, edges };
+  return { markdown, displayMarkdown, parsed, metadata: updatedMetadata, nodes, edges };
 }
 
 export const useMindMapStore = create<MindMapState>((set, get) => ({
   markdown: '',
+  displayMarkdown: '',
   metadata: INITIAL_METADATA,
   parsed: null,
   nodes: [],
@@ -99,9 +103,28 @@ export const useMindMapStore = create<MindMapState>((set, get) => ({
   editingNodeId: null,
 
   setMarkdown: (markdown: string) => {
-    const { parsed, markdownWithIds, hasChanges } = parseAndEnsureIds(markdown);
-    const finalMarkdown = hasChanges ? markdownWithIds : markdown;
-    const { metadata } = get();
+    const { parsed: existingParsed, metadata } = get();
+
+    // 入力にIDがあるか確認
+    const hasIds = /<!--\s*id:[a-zA-Z0-9]+\s*-->/.test(markdown);
+
+    let parsed: ParsedMarkdown;
+    let finalMarkdown: string;
+
+    if (hasIds) {
+      // IDがある場合は通常のパース（parseAndEnsureIds）
+      const result = parseAndEnsureIds(markdown);
+      parsed = result.parsed;
+      finalMarkdown = result.markdownWithIds;
+    } else {
+      // IDがない場合は既存ツリーとマッチングして同期
+      const result = syncMarkdownWithTree(markdown, existingParsed?.items ?? null);
+      parsed = result.parsed;
+      finalMarkdown = result.markdownWithIds;
+    }
+
+    // 表示用マークダウンを生成（IDなし）
+    const displayMarkdown = treeToMarkdown(parsed.items, { embedIds: false });
 
     const updatedNodeMetadata = calculateLayout(
       parsed.items,
@@ -118,6 +141,7 @@ export const useMindMapStore = create<MindMapState>((set, get) => ({
 
     set({
       markdown: finalMarkdown,
+      displayMarkdown,
       parsed,
       metadata: updatedMetadata,
       nodes,
@@ -215,10 +239,12 @@ export const useMindMapStore = create<MindMapState>((set, get) => ({
     if (data) {
       const { parsed, markdownWithIds, hasChanges } = parseAndEnsureIds(data.markdown);
       const finalMarkdown = hasChanges ? markdownWithIds : data.markdown;
+      const displayMarkdown = treeToMarkdown(parsed.items, { embedIds: false });
       const { nodes, edges } = treeToFlow(parsed, data.metadata);
 
       set({
         markdown: finalMarkdown,
+        displayMarkdown,
         metadata: data.metadata,
         parsed,
         nodes,

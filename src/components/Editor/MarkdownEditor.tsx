@@ -4,14 +4,14 @@ import { useDebounce } from '../../hooks/useDebounce';
 import './MarkdownEditor.css';
 
 export function MarkdownEditor() {
-  const { markdown, setMarkdown } = useMindMapStore();
-  const [localValue, setLocalValue] = useState(markdown);
+  const { displayMarkdown, setMarkdown } = useMindMapStore();
+  const [localValue, setLocalValue] = useState(displayMarkdown);
 
   const debouncedSetMarkdown = useDebounce(setMarkdown, 300);
 
   useEffect(() => {
-    setLocalValue(markdown);
-  }, [markdown]);
+    setLocalValue(displayMarkdown);
+  }, [displayMarkdown]);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {

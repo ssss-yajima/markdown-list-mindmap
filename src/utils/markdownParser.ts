@@ -1,5 +1,5 @@
 import type { ListItem, ParsedMarkdown } from '../types/markdown';
-import { extractId, removeIdComment, generateId, embedId } from './idManager';
+import { extractId, removeIdComment, generateId, embedId, matchNodes } from './idManager';
 
 const LIST_ITEM_REGEX = /^(\s*)([-*+]|\d+\.)\s+(.+)$/;
 
@@ -168,4 +168,135 @@ export function findParentNode(
     if (found !== null) return found;
   }
   return null;
+}
+
+/**
+ * IDなしでツリーをビルド（マッチング用）
+ */
+interface TempListItem {
+  text: string;
+  level: number;
+  lineNumber: number;
+  listType: 'unordered' | 'ordered';
+  children: TempListItem[];
+}
+
+function buildTreeWithoutIds(items: RawListItem[]): TempListItem[] {
+  const root: TempListItem[] = [];
+  const stack: { item: TempListItem; level: number }[] = [];
+
+  items.forEach((raw) => {
+    const item: TempListItem = {
+      text: raw.cleanText,
+      level: raw.indent,
+      lineNumber: raw.lineNumber,
+      listType: raw.listType,
+      children: [],
+    };
+
+    while (stack.length > 0 && stack[stack.length - 1].level >= raw.indent) {
+      stack.pop();
+    }
+
+    if (stack.length === 0) {
+      root.push(item);
+    } else {
+      stack[stack.length - 1].item.children.push(item);
+    }
+
+    stack.push({ item, level: raw.indent });
+  });
+
+  return root;
+}
+
+/**
+ * TempListItemにIDを割り当ててListItemに変換
+ */
+function assignIds(
+  items: TempListItem[],
+  idMapping: Map<number, string>,
+  counter: { value: number }
+): ListItem[] {
+  return items.map((item) => {
+    const currentIndex = counter.value;
+    counter.value++;
+
+    const id = idMapping.get(currentIndex) ?? generateId();
+
+    return {
+      id,
+      text: item.text,
+      level: item.level,
+      lineNumber: item.lineNumber,
+      listType: item.listType,
+      children: assignIds(item.children, idMapping, counter),
+    };
+  });
+}
+
+/**
+ * IDなしマークダウンと既存ツリーを同期
+ * - 既存ノードとマッチすればIDを保持
+ * - 新規行には新しいIDを付与
+ *
+ * @param newMarkdown - 新しいマークダウン（IDコメントなし）
+ * @param existingItems - 既存のListItemツリー（IDあり）
+ * @returns パース結果とIDを埋め込んだマークダウン
+ */
+export function syncMarkdownWithTree(
+  newMarkdown: string,
+  existingItems: ListItem[] | null
+): { parsed: ParsedMarkdown; markdownWithIds: string } {
+  // 新しいマークダウンをトークン化
+  const tokens = tokenize(newMarkdown);
+
+  // 既存ツリーがなければ通常のパース
+  if (!existingItems || existingItems.length === 0) {
+    return parseAndEnsureIds(newMarkdown);
+  }
+
+  // IDなしでツリーをビルド
+  const tempTree = buildTreeWithoutIds(tokens);
+
+  // 既存ツリーとマッチング
+  const idMapping = matchNodes(existingItems, tempTree);
+
+  // IDを割り当て
+  const items = assignIds(tempTree, idMapping, { value: 0 });
+
+  // IDを埋め込んだマークダウンを生成
+  const lines = newMarkdown.split('\n');
+  const newLines: string[] = [];
+  let itemIndex = 0;
+
+  const flattenItems = (list: ListItem[]): ListItem[] => {
+    const result: ListItem[] = [];
+    for (const item of list) {
+      result.push(item);
+      result.push(...flattenItems(item.children));
+    }
+    return result;
+  };
+
+  const flatItems = flattenItems(items);
+
+  lines.forEach((line) => {
+    const match = line.match(LIST_ITEM_REGEX);
+    if (match && itemIndex < flatItems.length) {
+      const [, indent, marker, text] = match;
+      const cleanText = removeIdComment(text);
+      const item = flatItems[itemIndex];
+      const newText = embedId(cleanText.trim(), item.id);
+      newLines.push(`${indent}${marker} ${newText}`);
+      itemIndex++;
+    } else {
+      newLines.push(line);
+    }
+  });
+
+  const markdownWithIds = newLines.join('\n');
+  const parsed: ParsedMarkdown = { items, rawText: markdownWithIds };
+
+  return { parsed, markdownWithIds };
 }
