@@ -1,3 +1,17 @@
+:root {
+  --color-bg: #fafaf8;
+  --color-bg-white: #ffffff;
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #4a4a4a;
+  --color-text-muted: #888888;
+  --color-border-dark: #333333;
+  --color-border-medium: #666666;
+  --color-border-light: #e0e0e0;
+  --color-grid: #e0e0e0;
+  --font-handwriting: 'Yomogi', sans-serif;
+  --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -6,7 +20,9 @@ html, body, #root {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-system);
+  color: var(--color-text-primary);
+  background: var(--color-bg);
 }
 
 .app {
@@ -16,16 +32,20 @@ html, body, #root {
 }
 
 .app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 12px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--color-bg-white);
+  color: var(--color-text-primary);
+  border-bottom: 2px solid var(--color-border-dark);
   flex-shrink: 0;
 }
 
 .app-header h1 {
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 400;
 }
 
 .app-main {

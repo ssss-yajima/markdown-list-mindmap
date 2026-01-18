@@ -1,9 +1,9 @@
-import { useCallback } from 'react';
+import { useCallback, createContext, useContext } from 'react';
 import {
   ReactFlow,
   Controls,
-  MiniMap,
   Background,
+  BackgroundVariant,
   type Node,
   type NodeTypes,
   type OnNodesChange,
@@ -13,9 +13,22 @@ import '@xyflow/react/dist/style.css';
 
 import { MindMapNode } from './MindMapNode';
 import { useMindMapStore } from '../../stores/mindMapStore';
+import { useConfigStore, type NodeStyle, type FontStyle } from '../../stores/configStore';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import type { MindMapNodeData } from '../../types/mindMap';
 import './MindMapCanvas.css';
+
+interface CanvasSettings {
+  nodeStyle: NodeStyle;
+  fontStyle: FontStyle;
+}
+
+export const CanvasSettingsContext = createContext<CanvasSettings>({
+  nodeStyle: 'underline',
+  fontStyle: 'handwriting',
+});
+
+export const useCanvasSettings = () => useContext(CanvasSettingsContext);
 
 const nodeTypes: NodeTypes = {
   mindmap: MindMapNode,
@@ -31,6 +44,8 @@ export function MindMapCanvas() {
     setSelectedNodeId,
     setEditingNodeId,
   } = useMindMapStore();
+
+  const { backgroundStyle, nodeStyle, fontStyle } = useConfigStore();
 
   // キーボードショートカットを有効化
   useKeyboardShortcuts();
@@ -69,8 +84,6 @@ export function MindMapCanvas() {
         setSelectedNodeId(selectedNodes[0].id);
       } else if (selectedNodes.length === 0) {
         setSelectedNodeId(null);
-        // 編集中のノードがある場合はeditingNodeIdを維持（新ノード作成直後など）
-        // paneClickで明示的にクリアされる
       }
     },
     [setSelectedNodeId]
@@ -81,40 +94,77 @@ export function MindMapCanvas() {
     setEditingNodeId(null);
   }, [setSelectedNodeId, setEditingNodeId]);
 
+  const renderBackground = () => {
+    switch (backgroundStyle) {
+      case 'none':
+        return null;
+      case 'grid':
+        return (
+          <Background
+            variant={BackgroundVariant.Lines}
+            gap={24}
+            color="rgba(200, 200, 200, 0.3)"
+            lineWidth={1}
+          />
+        );
+      case 'ruled':
+        return (
+          <Background
+            variant={BackgroundVariant.Lines}
+            gap={[10000, 24]}
+            color="rgba(200, 200, 200, 0.4)"
+            lineWidth={1}
+          />
+        );
+      case 'dots':
+        return (
+          <Background
+            variant={BackgroundVariant.Dots}
+            gap={20}
+            size={1.5}
+            color="rgba(150, 150, 150, 0.5)"
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="mindmap-canvas">
-      <div className="canvas-toolbar">
-        <button onClick={recalculateLayout} className="toolbar-button">
-          レイアウト再計算
-        </button>
-        <div className="toolbar-hint">
-          Tab: 子追加 | Enter: 兄弟追加 | Cmd+Del: 削除 | F2: 編集
+    <CanvasSettingsContext.Provider value={{ nodeStyle, fontStyle }}>
+      <div className="mindmap-canvas">
+        <div className="canvas-toolbar">
+          <button onClick={recalculateLayout} className="toolbar-button">
+            Auto Layout
+          </button>
+          <div className="toolbar-hint">
+            Tab: Add Child | Enter: Add Below | Cmd+Del: Delete | F2: Edit
+          </div>
         </div>
+        <ReactFlow
+          nodes={nodes as Node[]}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          onNodesChange={onNodesChange}
+          onNodeDragStop={onNodeDragStop}
+          onNodeDoubleClick={onNodeDoubleClick}
+          onSelectionChange={onSelectionChange}
+          onPaneClick={onPaneClick}
+          fitView
+          minZoom={0.1}
+          maxZoom={2}
+          defaultEdgeOptions={{
+            type: 'bezier',
+          }}
+          selectNodesOnDrag={false}
+          deleteKeyCode={null}
+          selectionKeyCode={null}
+          disableKeyboardA11y={true}
+        >
+          <Controls />
+          {renderBackground()}
+        </ReactFlow>
       </div>
-      <ReactFlow
-        nodes={nodes as Node[]}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        onNodesChange={onNodesChange}
-        onNodeDragStop={onNodeDragStop}
-        onNodeDoubleClick={onNodeDoubleClick}
-        onSelectionChange={onSelectionChange}
-        onPaneClick={onPaneClick}
-        fitView
-        minZoom={0.1}
-        maxZoom={2}
-        defaultEdgeOptions={{
-          type: 'bezier',
-        }}
-        selectNodesOnDrag={false}
-        deleteKeyCode={null}
-        selectionKeyCode={null}
-        disableKeyboardA11y={true}
-      >
-        <Controls />
-        <MiniMap />
-        <Background />
-      </ReactFlow>
-    </div>
+    </CanvasSettingsContext.Provider>
   );
 }

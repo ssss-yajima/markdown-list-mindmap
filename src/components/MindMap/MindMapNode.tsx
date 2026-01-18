@@ -2,6 +2,7 @@ import { memo, useState, useRef, useEffect, useCallback } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import type { MindMapNode as MindMapNodeType } from '../../types/mindMap';
 import { useMindMapStore } from '../../stores/mindMapStore';
+import { useCanvasSettings } from './MindMapCanvas';
 import './MindMapNode.css';
 
 export const MindMapNode = memo(function MindMapNode({
@@ -10,6 +11,7 @@ export const MindMapNode = memo(function MindMapNode({
   selected,
 }: NodeProps<MindMapNodeType>) {
   const { label, level, hasChildren, expanded } = data;
+  const { nodeStyle, fontStyle } = useCanvasSettings();
 
   const {
     editingNodeId,
@@ -177,7 +179,7 @@ export const MindMapNode = memo(function MindMapNode({
 
   return (
     <div
-      className={`mindmap-node level-${level} ${selected ? 'selected' : ''} ${isEditing ? 'editing' : ''}`}
+      className={`mindmap-node level-${level} ${selected ? 'selected' : ''} ${isEditing ? 'editing' : ''} style-${nodeStyle} font-${fontStyle}`}
       onDoubleClick={handleDoubleClick}
       onKeyDown={handleNodeKeyDown}
       tabIndex={0}

@@ -26,16 +26,16 @@ export function MarkdownEditor() {
     <div className="markdown-editor">
       <div className="editor-header">
         <h3>Markdown</h3>
-        <span className="editor-hint">箇条書き (-、*、1.) を入力</span>
+        <span className="editor-hint">Use -, *, or 1. for lists</span>
       </div>
       <textarea
         className="editor-textarea"
         value={localValue}
         onChange={handleChange}
-        placeholder={`- 箇条書きを入力
-  - インデントで階層化
-    - さらにネスト
-- 別のトピック`}
+        placeholder={`- Enter list items
+  - Indent to create hierarchy
+    - Nest further
+- Another topic`}
         spellCheck={false}
       />
     </div>
