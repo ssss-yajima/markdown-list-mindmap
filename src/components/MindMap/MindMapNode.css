@@ -1,0 +1,58 @@
+.mindmap-node {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: white;
+  border: 2px solid #e2e8f0;
+  min-width: 120px;
+  max-width: 250px;
+  cursor: grab;
+  transition: all 0.15s ease;
+}
+
+.mindmap-node:hover {
+  border-color: #94a3b8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.mindmap-node.selected {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.mindmap-node.level-0 {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+  border: none;
+}
+
+.mindmap-node.level-1 {
+  background: #f1f5f9;
+  font-weight: 500;
+}
+
+.mindmap-node.level-2 {
+  background: #fafafa;
+  font-size: 13px;
+}
+
+.node-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.expand-icon {
+  font-size: 10px;
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.expand-icon:hover {
+  opacity: 1;
+}
+
+.node-label {
+  word-break: break-word;
+}

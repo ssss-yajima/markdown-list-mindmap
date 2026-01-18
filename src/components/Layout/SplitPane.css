@@ -1,0 +1,33 @@
+.split-pane {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.split-pane.dragging {
+  cursor: col-resize;
+  user-select: none;
+}
+
+.split-pane-left {
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.split-pane-divider {
+  width: 4px;
+  background: #e2e8f0;
+  cursor: col-resize;
+  transition: background 0.15s ease;
+}
+
+.split-pane-divider:hover,
+.split-pane.dragging .split-pane-divider {
+  background: #94a3b8;
+}
+
+.split-pane-right {
+  flex: 1;
+  overflow: hidden;
+}
