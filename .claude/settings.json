@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm:*)",
+      "Bash(pnpm:*)",
+      "Bash(git:*)",
+      "Bash(gh:*)",
+      "Bash(task:*)",
+      "Bash(uv:*)",
+      "Read(**)",
+      "Edit(~/projects/**)",
+      "WebFetch(domain:*)"
+    ]
+  },
+  "cleanupPeriodDays": 60,
+  "plansDirectory": "./.plans"
+}
