@@ -1,13 +1,29 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { useMindMapStore } from '../../stores/mindMapStore';
 import { useDebounce } from '../../hooks/useDebounce';
+import { useMarkdownEditorKeyboard } from '../../hooks/useMarkdownEditorKeyboard';
 import './MarkdownEditor.css';
 
 export function MarkdownEditor() {
   const { displayMarkdown, setMarkdown } = useMindMapStore();
   const [localValue, setLocalValue] = useState(displayMarkdown);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const debouncedSetMarkdown = useDebounce(setMarkdown, 300);
+
+  const handleLocalChange = useCallback(
+    (newValue: string) => {
+      setLocalValue(newValue);
+      debouncedSetMarkdown(newValue);
+    },
+    [debouncedSetMarkdown]
+  );
+
+  const { handleKeyDown } = useMarkdownEditorKeyboard({
+    textareaRef,
+    value: localValue,
+    onChange: handleLocalChange,
+  });
 
   useEffect(() => {
     setLocalValue(displayMarkdown);
@@ -29,9 +45,11 @@ export function MarkdownEditor() {
         <span className="editor-hint">Use -, *, or 1. for lists</span>
       </div>
       <textarea
+        ref={textareaRef}
         className="editor-textarea"
         value={localValue}
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
         placeholder={`- Enter list items
   - Indent to create hierarchy
     - Nest further
