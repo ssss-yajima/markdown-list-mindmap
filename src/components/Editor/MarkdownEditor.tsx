@@ -11,7 +11,7 @@ export function MarkdownEditor() {
 
   const debouncedSetMarkdown = useDebounce(setMarkdown, 300)
 
-  const handleLocalChange = useCallback(
+  const handleValueChange = useCallback(
     (newValue: string) => {
       setLocalValue(newValue)
       debouncedSetMarkdown(newValue)
@@ -22,7 +22,7 @@ export function MarkdownEditor() {
   const { handleKeyDown } = useMarkdownEditorKeyboard({
     textareaRef,
     value: localValue,
-    onChange: handleLocalChange,
+    onChange: handleValueChange,
   })
 
   useEffect(() => {
@@ -31,11 +31,9 @@ export function MarkdownEditor() {
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const value = e.target.value
-      setLocalValue(value)
-      debouncedSetMarkdown(value)
+      handleValueChange(e.target.value)
     },
-    [debouncedSetMarkdown],
+    [handleValueChange],
   )
 
   return (

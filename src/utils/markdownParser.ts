@@ -149,34 +149,6 @@ export function getIdMapping(items: ListItem[]): Map<string, ListItem> {
 }
 
 /**
- * 特定のIDを持つノードを検索
- */
-export function findNodeById(items: ListItem[], id: string): ListItem | null {
-  for (const item of items) {
-    if (item.id === id) return item
-    const found = findNodeById(item.children, id)
-    if (found) return found
-  }
-  return null
-}
-
-/**
- * 特定のIDを持つノードの親を検索
- */
-export function findParentNode(
-  items: ListItem[],
-  id: string,
-  parent: ListItem | null = null,
-): ListItem | null {
-  for (const item of items) {
-    if (item.id === id) return parent
-    const found = findParentNode(item.children, id, item)
-    if (found !== null) return found
-  }
-  return null
-}
-
-/**
  * IDなしでツリーをビルド（マッチング用）
  */
 interface TempListItem {
