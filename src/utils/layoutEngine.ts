@@ -12,9 +12,9 @@ interface LayoutConfig {
 const DEFAULT_CONFIG: LayoutConfig = {
   nodeWidth: 250, // CSSのmax-widthに合わせる
   nodeHeight: 40,
-  horizontalGap: 80,
-  verticalGap: 20,
-  minVerticalGap: 10,
+  horizontalGap: 30,
+  verticalGap: 4,
+  minVerticalGap: 4,
 }
 
 /**
