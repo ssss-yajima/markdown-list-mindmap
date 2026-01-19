@@ -40,17 +40,17 @@ Double-click a node for inline editing.
 ## Installation
 
 ```bash
-npm install
+pnpm install
 ```
 
 ## Development
 
 ```bash
-npm run dev          # Start dev server
-npm run build        # Production build
-npm run lint         # Run ESLint
-npm run type-check   # TypeScript check
-npm run test:e2e     # Run E2E tests
+pnpm dev          # Start dev server
+pnpm build        # Production build
+pnpm lint         # Run Biome lint
+pnpm type-check   # TypeScript check
+pnpm test:e2e     # Run E2E tests
 ```
 
 ## Tech Stack
