@@ -3,12 +3,12 @@
 ## Commands
 
 ```bash
-npm run dev          # Start dev server (localhost:5173)
-npm run build        # Production build (tsc + vite)
-npm run lint         # Biome lint
-npm run type-check   # TypeScript check
-npm run test:e2e     # Playwright E2E tests
-npm run format:check # Biome format check
+pnpm dev          # Start dev server (localhost:5173)
+pnpm build        # Production build (tsc + vite)
+pnpm lint         # Biome lint
+pnpm type-check   # TypeScript check
+pnpm test:e2e     # Playwright E2E tests
+pnpm format:check # Biome format check
 ```
 
 ## CI
