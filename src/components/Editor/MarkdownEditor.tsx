@@ -1,42 +1,42 @@
-import { useCallback, useState, useEffect, useRef } from 'react';
-import { useMindMapStore } from '../../stores/mindMapStore';
-import { useDebounce } from '../../hooks/useDebounce';
-import { useMarkdownEditorKeyboard } from '../../hooks/useMarkdownEditorKeyboard';
-import './MarkdownEditor.css';
+import { useCallback, useState, useEffect, useRef } from 'react'
+import { useMindMapStore } from '../../stores/mindMapStore'
+import { useDebounce } from '../../hooks/useDebounce'
+import { useMarkdownEditorKeyboard } from '../../hooks/useMarkdownEditorKeyboard'
+import './MarkdownEditor.css'
 
 export function MarkdownEditor() {
-  const { displayMarkdown, setMarkdown } = useMindMapStore();
-  const [localValue, setLocalValue] = useState(displayMarkdown);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { displayMarkdown, setMarkdown } = useMindMapStore()
+  const [localValue, setLocalValue] = useState(displayMarkdown)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const debouncedSetMarkdown = useDebounce(setMarkdown, 300);
+  const debouncedSetMarkdown = useDebounce(setMarkdown, 300)
 
   const handleLocalChange = useCallback(
     (newValue: string) => {
-      setLocalValue(newValue);
-      debouncedSetMarkdown(newValue);
+      setLocalValue(newValue)
+      debouncedSetMarkdown(newValue)
     },
-    [debouncedSetMarkdown]
-  );
+    [debouncedSetMarkdown],
+  )
 
   const { handleKeyDown } = useMarkdownEditorKeyboard({
     textareaRef,
     value: localValue,
     onChange: handleLocalChange,
-  });
+  })
 
   useEffect(() => {
-    setLocalValue(displayMarkdown);
-  }, [displayMarkdown]);
+    setLocalValue(displayMarkdown)
+  }, [displayMarkdown])
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const value = e.target.value;
-      setLocalValue(value);
-      debouncedSetMarkdown(value);
+      const value = e.target.value
+      setLocalValue(value)
+      debouncedSetMarkdown(value)
     },
-    [debouncedSetMarkdown]
-  );
+    [debouncedSetMarkdown],
+  )
 
   return (
     <div className="markdown-editor">
@@ -57,5 +57,5 @@ export function MarkdownEditor() {
         spellCheck={false}
       />
     </div>
-  );
+  )
 }

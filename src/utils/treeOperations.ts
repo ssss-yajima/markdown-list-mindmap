@@ -3,8 +3,8 @@
  * ListItemツリーの追加・削除・移動・更新操作を提供
  */
 
-import type { ListItem } from '../types/markdown';
-import { generateId } from './idManager';
+import type { ListItem } from '../types/markdown'
+import { generateId } from './idManager'
 
 /**
  * ツリーをディープコピー
@@ -13,7 +13,7 @@ export function cloneTree(items: ListItem[]): ListItem[] {
   return items.map((item) => ({
     ...item,
     children: cloneTree(item.children),
-  }));
+  }))
 }
 
 /**
@@ -21,11 +21,11 @@ export function cloneTree(items: ListItem[]): ListItem[] {
  */
 export function findNode(items: ListItem[], id: string): ListItem | null {
   for (const item of items) {
-    if (item.id === id) return item;
-    const found = findNode(item.children, id);
-    if (found) return found;
+    if (item.id === id) return item
+    const found = findNode(item.children, id)
+    if (found) return found
   }
-  return null;
+  return null
 }
 
 /**
@@ -34,14 +34,14 @@ export function findNode(items: ListItem[], id: string): ListItem | null {
 export function findParent(
   items: ListItem[],
   id: string,
-  parent: ListItem | null = null
+  parent: ListItem | null = null,
 ): ListItem | null {
   for (const item of items) {
-    if (item.id === id) return parent;
-    const found = findParent(item.children, id, item);
-    if (found !== null) return found;
+    if (item.id === id) return parent
+    const found = findParent(item.children, id, item)
+    if (found !== null) return found
   }
-  return null;
+  return null
 }
 
 /**
@@ -49,16 +49,16 @@ export function findParent(
  */
 export function findSiblings(
   items: ListItem[],
-  id: string
+  id: string,
 ): { siblings: ListItem[]; index: number } | null {
   for (let i = 0; i < items.length; i++) {
     if (items[i].id === id) {
-      return { siblings: items, index: i };
+      return { siblings: items, index: i }
     }
-    const found = findSiblings(items[i].children, id);
-    if (found) return found;
+    const found = findSiblings(items[i].children, id)
+    if (found) return found
   }
-  return null;
+  return null
 }
 
 /**
@@ -67,7 +67,7 @@ export function findSiblings(
 export function createNode(
   text: string,
   level: number,
-  listType: 'unordered' | 'ordered' = 'unordered'
+  listType: 'unordered' | 'ordered' = 'unordered',
 ): ListItem {
   return {
     id: generateId(),
@@ -76,7 +76,7 @@ export function createNode(
     lineNumber: 0,
     listType,
     children: [],
-  };
+  }
 }
 
 /**
@@ -86,19 +86,19 @@ export function createNode(
 export function addChildNode(
   items: ListItem[],
   parentId: string,
-  text: string = '新しいノード'
+  text = '新しいノード',
 ): { items: ListItem[]; newNodeId: string } {
-  const newItems = cloneTree(items);
-  const parent = findNode(newItems, parentId);
+  const newItems = cloneTree(items)
+  const parent = findNode(newItems, parentId)
 
   if (!parent) {
-    throw new Error(`Parent node not found: ${parentId}`);
+    throw new Error(`Parent node not found: ${parentId}`)
   }
 
-  const newNode = createNode(text, parent.level + 1, parent.listType);
-  parent.children.push(newNode);
+  const newNode = createNode(text, parent.level + 1, parent.listType)
+  parent.children.push(newNode)
 
-  return { items: newItems, newNodeId: newNode.id };
+  return { items: newItems, newNodeId: newNode.id }
 }
 
 /**
@@ -108,22 +108,22 @@ export function addChildNode(
 export function addSiblingNode(
   items: ListItem[],
   siblingId: string,
-  text: string = '新しいノード'
+  text = '新しいノード',
 ): { items: ListItem[]; newNodeId: string } {
-  const newItems = cloneTree(items);
-  const result = findSiblings(newItems, siblingId);
+  const newItems = cloneTree(items)
+  const result = findSiblings(newItems, siblingId)
 
   if (!result) {
-    throw new Error(`Sibling node not found: ${siblingId}`);
+    throw new Error(`Sibling node not found: ${siblingId}`)
   }
 
-  const { siblings, index } = result;
-  const sibling = siblings[index];
-  const newNode = createNode(text, sibling.level, sibling.listType);
+  const { siblings, index } = result
+  const sibling = siblings[index]
+  const newNode = createNode(text, sibling.level, sibling.listType)
 
-  siblings.splice(index + 1, 0, newNode);
+  siblings.splice(index + 1, 0, newNode)
 
-  return { items: newItems, newNodeId: newNode.id };
+  return { items: newItems, newNodeId: newNode.id }
 }
 
 /**
@@ -133,22 +133,22 @@ export function addSiblingNode(
 export function addSiblingNodeBefore(
   items: ListItem[],
   siblingId: string,
-  text: string = '新しいノード'
+  text = '新しいノード',
 ): { items: ListItem[]; newNodeId: string } {
-  const newItems = cloneTree(items);
-  const result = findSiblings(newItems, siblingId);
+  const newItems = cloneTree(items)
+  const result = findSiblings(newItems, siblingId)
 
   if (!result) {
-    throw new Error(`Sibling node not found: ${siblingId}`);
+    throw new Error(`Sibling node not found: ${siblingId}`)
   }
 
-  const { siblings, index } = result;
-  const sibling = siblings[index];
-  const newNode = createNode(text, sibling.level, sibling.listType);
+  const { siblings, index } = result
+  const sibling = siblings[index]
+  const newNode = createNode(text, sibling.level, sibling.listType)
 
-  siblings.splice(index, 0, newNode);
+  siblings.splice(index, 0, newNode)
 
-  return { items: newItems, newNodeId: newNode.id };
+  return { items: newItems, newNodeId: newNode.id }
 }
 
 /**
@@ -156,17 +156,17 @@ export function addSiblingNodeBefore(
  * @returns 新しいツリー
  */
 export function deleteNode(items: ListItem[], nodeId: string): ListItem[] {
-  const newItems = cloneTree(items);
-  const result = findSiblings(newItems, nodeId);
+  const newItems = cloneTree(items)
+  const result = findSiblings(newItems, nodeId)
 
   if (!result) {
-    throw new Error(`Node not found: ${nodeId}`);
+    throw new Error(`Node not found: ${nodeId}`)
   }
 
-  const { siblings, index } = result;
-  siblings.splice(index, 1);
+  const { siblings, index } = result
+  siblings.splice(index, 1)
 
-  return newItems;
+  return newItems
 }
 
 /**
@@ -176,17 +176,17 @@ export function deleteNode(items: ListItem[], nodeId: string): ListItem[] {
 export function updateNodeText(
   items: ListItem[],
   nodeId: string,
-  newText: string
+  newText: string,
 ): ListItem[] {
-  const newItems = cloneTree(items);
-  const node = findNode(newItems, nodeId);
+  const newItems = cloneTree(items)
+  const node = findNode(newItems, nodeId)
 
   if (!node) {
-    throw new Error(`Node not found: ${nodeId}`);
+    throw new Error(`Node not found: ${nodeId}`)
   }
 
-  node.text = newText;
-  return newItems;
+  node.text = newText
+  return newItems
 }
 
 /**
@@ -196,86 +196,88 @@ export function updateNodeText(
 export function moveNode(
   items: ListItem[],
   nodeId: string,
-  newParentId: string | null
+  newParentId: string | null,
 ): ListItem[] {
-  const newItems = cloneTree(items);
+  const newItems = cloneTree(items)
 
   // ノードを現在の位置から削除
-  const sourceResult = findSiblings(newItems, nodeId);
+  const sourceResult = findSiblings(newItems, nodeId)
   if (!sourceResult) {
-    throw new Error(`Node not found: ${nodeId}`);
+    throw new Error(`Node not found: ${nodeId}`)
   }
 
-  const { siblings: sourceSiblings, index: sourceIndex } = sourceResult;
-  const [movedNode] = sourceSiblings.splice(sourceIndex, 1);
+  const { siblings: sourceSiblings, index: sourceIndex } = sourceResult
+  const [movedNode] = sourceSiblings.splice(sourceIndex, 1)
 
   // 新しい親に追加
   if (newParentId === null) {
     // ルートレベルに移動
-    movedNode.level = 0;
-    newItems.push(movedNode);
+    movedNode.level = 0
+    newItems.push(movedNode)
   } else {
-    const newParent = findNode(newItems, newParentId);
+    const newParent = findNode(newItems, newParentId)
     if (!newParent) {
-      throw new Error(`New parent not found: ${newParentId}`);
+      throw new Error(`New parent not found: ${newParentId}`)
     }
-    movedNode.level = newParent.level + 1;
-    newParent.children.push(movedNode);
+    movedNode.level = newParent.level + 1
+    newParent.children.push(movedNode)
   }
 
   // 移動したノードの子孫のレベルを更新
   function updateChildLevels(node: ListItem, parentLevel: number): void {
-    node.level = parentLevel + 1;
-    node.children.forEach((child) => updateChildLevels(child, node.level));
+    node.level = parentLevel + 1
+    node.children.forEach((child) => updateChildLevels(child, node.level))
   }
 
-  movedNode.children.forEach((child) => updateChildLevels(child, movedNode.level));
+  movedNode.children.forEach((child) =>
+    updateChildLevels(child, movedNode.level),
+  )
 
-  return newItems;
+  return newItems
 }
 
 /**
  * 行番号を再計算（マークダウン出力時に使用）
  */
 export function recalculateLineNumbers(items: ListItem[]): ListItem[] {
-  const newItems = cloneTree(items);
-  let lineNumber = 1;
+  const newItems = cloneTree(items)
+  let lineNumber = 1
 
   function traverse(item: ListItem): void {
-    item.lineNumber = lineNumber++;
-    item.children.forEach(traverse);
+    item.lineNumber = lineNumber++
+    item.children.forEach(traverse)
   }
 
-  newItems.forEach(traverse);
-  return newItems;
+  newItems.forEach(traverse)
+  return newItems
 }
 
 /**
  * 全ノードのIDをリストで取得
  */
 export function getAllNodeIds(items: ListItem[]): string[] {
-  const ids: string[] = [];
+  const ids: string[] = []
 
   function traverse(item: ListItem): void {
-    ids.push(item.id);
-    item.children.forEach(traverse);
+    ids.push(item.id)
+    item.children.forEach(traverse)
   }
 
-  items.forEach(traverse);
-  return ids;
+  items.forEach(traverse)
+  return ids
 }
 
 /**
  * ノード数をカウント
  */
 export function countNodes(items: ListItem[]): number {
-  let count = 0;
+  let count = 0
 
   function traverse(item: ListItem): void {
-    count++;
-    item.children.forEach(traverse);
+    count++
+    item.children.forEach(traverse)
   }
 
-  items.forEach(traverse);
-  return count;
+  items.forEach(traverse)
+  return count
 }

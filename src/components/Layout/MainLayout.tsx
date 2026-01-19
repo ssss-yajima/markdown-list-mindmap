@@ -1,9 +1,9 @@
-import type { ReactNode } from 'react';
-import { FileList } from '../FileManager/FileList';
-import './MainLayout.css';
+import type { ReactNode } from 'react'
+import { FileList } from '../FileManager/FileList'
+import './MainLayout.css'
 
 interface MainLayoutProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
@@ -14,5 +14,5 @@ export function MainLayout({ children }: MainLayoutProps) {
       </aside>
       <div className="main-layout-content">{children}</div>
     </div>
-  );
+  )
 }

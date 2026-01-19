@@ -1,13 +1,13 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import type { FileInfo } from '../../types/file';
+import { useState, useRef, useEffect, useCallback } from 'react'
+import type { FileInfo } from '../../types/file'
 
 interface FileListItemProps {
-  file: FileInfo;
-  isActive: boolean;
-  canDelete: boolean;
-  onSelect: (fileId: string) => void;
-  onRename: (fileId: string, newName: string) => void;
-  onDelete: (fileId: string) => void;
+  file: FileInfo
+  isActive: boolean
+  canDelete: boolean
+  onSelect: (fileId: string) => void
+  onRename: (fileId: string, newName: string) => void
+  onDelete: (fileId: string) => void
 }
 
 export function FileListItem({
@@ -18,51 +18,51 @@ export function FileListItem({
   onRename,
   onDelete,
 }: FileListItemProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState(file.name);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [isEditing, setIsEditing] = useState(false)
+  const [editName, setEditName] = useState(file.name)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
+      inputRef.current.focus()
+      inputRef.current.select()
     }
-  }, [isEditing]);
+  }, [isEditing])
 
   const handleDoubleClick = useCallback(() => {
-    setEditName(file.name);
-    setIsEditing(true);
-  }, [file.name]);
+    setEditName(file.name)
+    setIsEditing(true)
+  }, [file.name])
 
   const handleSubmit = useCallback(() => {
-    const trimmedName = editName.trim();
+    const trimmedName = editName.trim()
     if (trimmedName && trimmedName !== file.name) {
-      onRename(file.id, trimmedName);
+      onRename(file.id, trimmedName)
     }
-    setIsEditing(false);
-  }, [editName, file.id, file.name, onRename]);
+    setIsEditing(false)
+  }, [editName, file.id, file.name, onRename])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter') {
-        handleSubmit();
+        handleSubmit()
       } else if (e.key === 'Escape') {
-        setEditName(file.name);
-        setIsEditing(false);
+        setEditName(file.name)
+        setIsEditing(false)
       }
     },
-    [handleSubmit, file.name]
-  );
+    [handleSubmit, file.name],
+  )
 
   const handleDeleteClick = useCallback(
     (e: React.MouseEvent) => {
-      e.stopPropagation();
+      e.stopPropagation()
       if (canDelete && window.confirm(`"${file.name}" を削除しますか？`)) {
-        onDelete(file.id);
+        onDelete(file.id)
       }
     },
-    [canDelete, file.id, file.name, onDelete]
-  );
+    [canDelete, file.id, file.name, onDelete],
+  )
 
   return (
     <div
@@ -95,7 +95,12 @@ export function FileListItem({
               onClick={handleDeleteClick}
               title="削除"
             >
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+              >
                 <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
                 <path
                   fillRule="evenodd"
@@ -107,5 +112,5 @@ export function FileListItem({
         </>
       )}
     </div>
-  );
+  )
 }

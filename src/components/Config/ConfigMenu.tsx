@@ -1,15 +1,15 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react'
 import {
   useConfigStore,
   type BackgroundStyle,
   type NodeStyle,
   type FontStyle,
-} from '../../stores/configStore';
-import './ConfigMenu.css';
+} from '../../stores/configStore'
+import './ConfigMenu.css'
 
 export function ConfigMenu() {
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   const {
     backgroundStyle,
@@ -18,41 +18,41 @@ export function ConfigMenu() {
     setBackgroundStyle,
     setNodeStyle,
     setFontStyle,
-  } = useConfigStore();
+  } = useConfigStore()
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+        setIsOpen(false)
       }
     }
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside)
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen])
 
   const backgroundOptions: { value: BackgroundStyle; label: string }[] = [
     { value: 'none', label: 'None' },
     { value: 'grid', label: 'Grid' },
     { value: 'ruled', label: 'Ruled' },
     { value: 'dots', label: 'Dots' },
-  ];
+  ]
 
   const nodeOptions: { value: NodeStyle; label: string }[] = [
     { value: 'none', label: 'None' },
     { value: 'underline', label: 'Underline' },
     { value: 'border', label: 'Border' },
-  ];
+  ]
 
   const fontOptions: { value: FontStyle; label: string }[] = [
     { value: 'handwriting', label: 'Handwriting' },
     { value: 'system', label: 'System' },
-  ];
+  ]
 
   return (
     <div className="config-menu" ref={menuRef}>
@@ -130,5 +130,5 @@ export function ConfigMenu() {
         </div>
       )}
     </div>
-  );
+  )
 }
