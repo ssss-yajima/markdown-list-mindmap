@@ -1,17 +1,17 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
-export type BackgroundStyle = 'none' | 'grid' | 'ruled' | 'dots';
-export type NodeStyle = 'none' | 'underline' | 'border';
-export type FontStyle = 'handwriting' | 'system';
+export type BackgroundStyle = 'none' | 'grid' | 'ruled' | 'dots'
+export type NodeStyle = 'none' | 'underline' | 'border'
+export type FontStyle = 'handwriting' | 'system'
 
 interface ConfigState {
-  backgroundStyle: BackgroundStyle;
-  nodeStyle: NodeStyle;
-  fontStyle: FontStyle;
-  setBackgroundStyle: (style: BackgroundStyle) => void;
-  setNodeStyle: (style: NodeStyle) => void;
-  setFontStyle: (style: FontStyle) => void;
+  backgroundStyle: BackgroundStyle
+  nodeStyle: NodeStyle
+  fontStyle: FontStyle
+  setBackgroundStyle: (style: BackgroundStyle) => void
+  setNodeStyle: (style: NodeStyle) => void
+  setFontStyle: (style: FontStyle) => void
 }
 
 export const useConfigStore = create<ConfigState>()(
@@ -26,6 +26,6 @@ export const useConfigStore = create<ConfigState>()(
     }),
     {
       name: 'mindmap-config',
-    }
-  )
-);
+    },
+  ),
+)

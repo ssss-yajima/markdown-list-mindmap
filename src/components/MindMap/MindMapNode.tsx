@@ -1,17 +1,17 @@
-import { memo, useState, useRef, useEffect, useCallback } from 'react';
-import { Handle, Position, type NodeProps } from '@xyflow/react';
-import type { MindMapNode as MindMapNodeType } from '../../types/mindMap';
-import { useMindMapStore } from '../../stores/mindMapStore';
-import { useCanvasSettings } from './MindMapCanvas';
-import './MindMapNode.css';
+import { memo, useState, useRef, useEffect, useCallback } from 'react'
+import { Handle, Position, type NodeProps } from '@xyflow/react'
+import type { MindMapNode as MindMapNodeType } from '../../types/mindMap'
+import { useMindMapStore } from '../../stores/mindMapStore'
+import { useCanvasSettings } from './MindMapCanvas'
+import './MindMapNode.css'
 
 export const MindMapNode = memo(function MindMapNode({
   id,
   data,
   selected,
 }: NodeProps<MindMapNodeType>) {
-  const { label, level, hasChildren, expanded } = data;
-  const { nodeStyle, fontStyle } = useCanvasSettings();
+  const { label, level, hasChildren, expanded } = data
+  const { nodeStyle, fontStyle } = useCanvasSettings()
 
   const {
     editingNodeId,
@@ -23,159 +23,177 @@ export const MindMapNode = memo(function MindMapNode({
     deleteNode,
     updateNodeText,
     toggleNodeExpanded,
-  } = useMindMapStore();
+  } = useMindMapStore()
 
-  const isEditing = editingNodeId === id;
-  const [editText, setEditText] = useState(label);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const isEditing = editingNodeId === id
+  const [editText, setEditText] = useState(label)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
       // React Flowがフォーカスを奪う可能性があるため、複数回フォーカスを試行
       const focusInput = () => {
         if (inputRef.current) {
-          inputRef.current.focus();
-          inputRef.current.select();
+          inputRef.current.focus()
+          inputRef.current.select()
         }
-      };
+      }
 
       // 即座に試行
-      focusInput();
+      focusInput()
 
       // 遅延して再試行（React Flowの再レンダリング後）
-      const timer1 = setTimeout(focusInput, 50);
-      const timer2 = setTimeout(focusInput, 100);
+      const timer1 = setTimeout(focusInput, 50)
+      const timer2 = setTimeout(focusInput, 100)
 
       return () => {
-        clearTimeout(timer1);
-        clearTimeout(timer2);
-      };
+        clearTimeout(timer1)
+        clearTimeout(timer2)
+      }
     }
-  }, [isEditing]);
+  }, [isEditing])
 
   useEffect(() => {
-    setEditText(label);
-  }, [label]);
+    setEditText(label)
+  }, [label])
 
   const handleDoubleClick = useCallback(
     (e: React.MouseEvent) => {
-      e.stopPropagation();
-      setEditingNodeId(id);
+      e.stopPropagation()
+      setEditingNodeId(id)
     },
-    [id, setEditingNodeId]
-  );
+    [id, setEditingNodeId],
+  )
 
   const handleInputBlur = useCallback(() => {
     if (editText.trim() && editText !== label) {
-      updateNodeText(id, editText.trim());
+      updateNodeText(id, editText.trim())
     } else {
-      setEditingNodeId(null);
-      setEditText(label);
+      setEditingNodeId(null)
+      setEditText(label)
     }
-  }, [editText, label, id, updateNodeText, setEditingNodeId]);
+  }, [editText, label, id, updateNodeText, setEditingNodeId])
 
   const handleInputKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       // IME入力中（日本語変換中など）は処理をスキップ
       if (e.nativeEvent.isComposing) {
-        return;
+        return
       }
 
       if (e.key === 'Enter') {
-        e.preventDefault();
+        e.preventDefault()
         // テキストを確定
         if (editText.trim() && editText !== label) {
-          updateNodeText(id, editText.trim());
+          updateNodeText(id, editText.trim())
         }
         // 新ノード作成（自動で編集モードになる）
         if (e.shiftKey) {
-          addSiblingNodeBefore(id); // 上に追加
+          addSiblingNodeBefore(id) // 上に追加
         } else {
-          addSiblingNode(id); // 下に追加
+          addSiblingNode(id) // 下に追加
         }
       } else if (e.key === 'Tab') {
-        e.preventDefault();
+        e.preventDefault()
         // テキストを確定
         if (editText.trim() && editText !== label) {
-          updateNodeText(id, editText.trim());
+          updateNodeText(id, editText.trim())
         }
-        addChildNode(id); // 子ノード追加
+        addChildNode(id) // 子ノード追加
       } else if (e.key === 'Escape') {
-        setEditText(label);
-        setEditingNodeId(null);
+        setEditText(label)
+        setEditingNodeId(null)
       }
     },
-    [editText, label, id, updateNodeText, setEditingNodeId, addSiblingNode, addSiblingNodeBefore, addChildNode]
-  );
+    [
+      editText,
+      label,
+      id,
+      updateNodeText,
+      setEditingNodeId,
+      addSiblingNode,
+      addSiblingNodeBefore,
+      addChildNode,
+    ],
+  )
 
   const handleAddChild = useCallback(
     (e: React.MouseEvent) => {
-      e.stopPropagation();
-      addChildNode(id);
+      e.stopPropagation()
+      addChildNode(id)
     },
-    [id, addChildNode]
-  );
+    [id, addChildNode],
+  )
 
   const handleExpandToggle = useCallback(
     (e: React.MouseEvent) => {
-      e.stopPropagation();
+      e.stopPropagation()
       if (hasChildren) {
-        toggleNodeExpanded(id);
+        toggleNodeExpanded(id)
       }
     },
-    [id, hasChildren, toggleNodeExpanded]
-  );
+    [id, hasChildren, toggleNodeExpanded],
+  )
 
   // 選択状態（非編集時）のキーボード操作
   const handleNodeKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       // 編集中は別のハンドラーで処理
-      if (isEditing) return;
+      if (isEditing) return
 
       switch (e.key) {
         case 'F2':
-          e.preventDefault();
-          e.stopPropagation();
-          setEditingNodeId(id);
-          break;
+          e.preventDefault()
+          e.stopPropagation()
+          setEditingNodeId(id)
+          break
 
         case 'Enter':
-          e.preventDefault();
-          e.stopPropagation();
+          e.preventDefault()
+          e.stopPropagation()
           if (e.shiftKey) {
-            addSiblingNodeBefore(id); // 上に追加
+            addSiblingNodeBefore(id) // 上に追加
           } else {
-            addSiblingNode(id); // 下に追加
+            addSiblingNode(id) // 下に追加
           }
-          break;
+          break
 
         case 'Tab':
-          e.preventDefault();
-          e.stopPropagation();
-          addChildNode(id);
-          break;
+          e.preventDefault()
+          e.stopPropagation()
+          addChildNode(id)
+          break
 
         case 'Backspace':
         case 'Delete':
           if (e.metaKey || e.ctrlKey) {
-            e.preventDefault();
-            e.stopPropagation();
-            deleteNode(id);
+            e.preventDefault()
+            e.stopPropagation()
+            deleteNode(id)
           }
-          break;
+          break
 
         case 'Escape':
-          e.preventDefault();
-          e.stopPropagation();
-          setSelectedNodeId(null);
-          break;
+          e.preventDefault()
+          e.stopPropagation()
+          setSelectedNodeId(null)
+          break
 
         default:
-          break;
+          break
       }
     },
-    [isEditing, id, setEditingNodeId, setSelectedNodeId, addChildNode, addSiblingNode, addSiblingNodeBefore, deleteNode]
-  );
+    [
+      isEditing,
+      id,
+      setEditingNodeId,
+      setSelectedNodeId,
+      addChildNode,
+      addSiblingNode,
+      addSiblingNodeBefore,
+      deleteNode,
+    ],
+  )
 
   return (
     <div
@@ -223,5 +241,5 @@ export const MindMapNode = memo(function MindMapNode({
 
       <Handle type="source" position={Position.Right} />
     </div>
-  );
-});
+  )
+})

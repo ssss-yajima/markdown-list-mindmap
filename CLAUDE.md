@@ -5,10 +5,19 @@
 ```bash
 npm run dev          # Start dev server (localhost:5173)
 npm run build        # Production build (tsc + vite)
-npm run lint         # ESLint
+npm run lint         # Biome lint
 npm run type-check   # TypeScript check
 npm run test:e2e     # Playwright E2E tests
+npm run format:check # Biome format check
 ```
+
+## CI
+
+GitHub Actions (`.github/workflows/ci.yml`) で push/PR 時に自動実行:
+- biome (lint + format:check)
+- type-check
+- build
+- test-e2e
 
 ## Architecture
 

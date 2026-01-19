@@ -1,11 +1,11 @@
-import { useState, useCallback, type ReactNode } from 'react';
-import './SplitPane.css';
+import { useState, useCallback, type ReactNode } from 'react'
+import './SplitPane.css'
 
 interface SplitPaneProps {
-  left: ReactNode;
-  right: ReactNode;
-  defaultLeftWidth?: number;
-  minWidth?: number;
+  left: ReactNode
+  right: ReactNode
+  defaultLeftWidth?: number
+  minWidth?: number
 }
 
 export function SplitPane({
@@ -14,25 +14,28 @@ export function SplitPane({
   defaultLeftWidth = 400,
   minWidth = 200,
 }: SplitPaneProps) {
-  const [leftWidth, setLeftWidth] = useState(defaultLeftWidth);
-  const [isDragging, setIsDragging] = useState(false);
+  const [leftWidth, setLeftWidth] = useState(defaultLeftWidth)
+  const [isDragging, setIsDragging] = useState(false)
 
   const handleMouseDown = useCallback(() => {
-    setIsDragging(true);
-  }, []);
+    setIsDragging(true)
+  }, [])
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
-      if (!isDragging) return;
-      const newWidth = Math.max(minWidth, Math.min(e.clientX, window.innerWidth - minWidth));
-      setLeftWidth(newWidth);
+      if (!isDragging) return
+      const newWidth = Math.max(
+        minWidth,
+        Math.min(e.clientX, window.innerWidth - minWidth),
+      )
+      setLeftWidth(newWidth)
     },
-    [isDragging, minWidth]
-  );
+    [isDragging, minWidth],
+  )
 
   const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
+    setIsDragging(false)
+  }, [])
 
   return (
     <div
@@ -45,9 +48,7 @@ export function SplitPane({
         {left}
       </div>
       <div className="split-pane-divider" onMouseDown={handleMouseDown} />
-      <div className="split-pane-right">
-        {right}
-      </div>
+      <div className="split-pane-right">{right}</div>
     </div>
-  );
+  )
 }

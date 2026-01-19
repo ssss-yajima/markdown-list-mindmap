@@ -1,25 +1,25 @@
-import type { StoredData } from '../types/mindMap';
-import type { FileIndex, FileInfo } from '../types/file';
+import type { StoredData } from '../types/mindMap'
+import type { FileIndex, FileInfo } from '../types/file'
 
 // 旧キー（単一ファイル）
-const LEGACY_STORAGE_KEY = 'markdown-mindmap-data';
+const LEGACY_STORAGE_KEY = 'markdown-mindmap-data'
 
 // 新キー（複数ファイル）
-const FILE_INDEX_KEY = 'mindmap-file-index';
-const FILE_DATA_PREFIX = 'mindmap-file-';
+const FILE_INDEX_KEY = 'mindmap-file-index'
+const FILE_DATA_PREFIX = 'mindmap-file-'
 
 /**
  * ユニークなIDを生成
  */
 function generateId(): string {
-  return Math.random().toString(36).substring(2, 10);
+  return Math.random().toString(36).substring(2, 10)
 }
 
 /**
  * ファイルデータ用のストレージキーを生成
  */
 function getFileDataKey(fileId: string): string {
-  return `${FILE_DATA_PREFIX}${fileId}`;
+  return `${FILE_DATA_PREFIX}${fileId}`
 }
 
 /**
@@ -31,11 +31,11 @@ export const fileStorage = {
    */
   loadIndex(): FileIndex | null {
     try {
-      const data = localStorage.getItem(FILE_INDEX_KEY);
-      return data ? JSON.parse(data) : null;
+      const data = localStorage.getItem(FILE_INDEX_KEY)
+      return data ? JSON.parse(data) : null
     } catch (e) {
-      console.error('Failed to load file index:', e);
-      return null;
+      console.error('Failed to load file index:', e)
+      return null
     }
   },
 
@@ -44,9 +44,9 @@ export const fileStorage = {
    */
   saveIndex(index: FileIndex): void {
     try {
-      localStorage.setItem(FILE_INDEX_KEY, JSON.stringify(index));
+      localStorage.setItem(FILE_INDEX_KEY, JSON.stringify(index))
     } catch (e) {
-      console.error('Failed to save file index:', e);
+      console.error('Failed to save file index:', e)
     }
   },
 
@@ -55,12 +55,12 @@ export const fileStorage = {
    */
   loadFileData(fileId: string): StoredData | null {
     try {
-      const key = getFileDataKey(fileId);
-      const data = localStorage.getItem(key);
-      return data ? JSON.parse(data) : null;
+      const key = getFileDataKey(fileId)
+      const data = localStorage.getItem(key)
+      return data ? JSON.parse(data) : null
     } catch (e) {
-      console.error(`Failed to load file data (${fileId}):`, e);
-      return null;
+      console.error(`Failed to load file data (${fileId}):`, e)
+      return null
     }
   },
 
@@ -69,10 +69,10 @@ export const fileStorage = {
    */
   saveFileData(fileId: string, data: StoredData): void {
     try {
-      const key = getFileDataKey(fileId);
-      localStorage.setItem(key, JSON.stringify(data));
+      const key = getFileDataKey(fileId)
+      localStorage.setItem(key, JSON.stringify(data))
     } catch (e) {
-      console.error(`Failed to save file data (${fileId}):`, e);
+      console.error(`Failed to save file data (${fileId}):`, e)
     }
   },
 
@@ -81,10 +81,10 @@ export const fileStorage = {
    */
   deleteFileData(fileId: string): void {
     try {
-      const key = getFileDataKey(fileId);
-      localStorage.removeItem(key);
+      const key = getFileDataKey(fileId)
+      localStorage.removeItem(key)
     } catch (e) {
-      console.error(`Failed to delete file data (${fileId}):`, e);
+      console.error(`Failed to delete file data (${fileId}):`, e)
     }
   },
 
@@ -92,20 +92,20 @@ export const fileStorage = {
    * 新規ファイルを作成
    */
   createFile(name: string): FileInfo {
-    const now = Date.now();
+    const now = Date.now()
     return {
       id: generateId(),
       name,
       createdAt: now,
       updatedAt: now,
-    };
+    }
   },
 
   /**
    * 旧データがあるかチェック
    */
   hasLegacyData(): boolean {
-    return localStorage.getItem(LEGACY_STORAGE_KEY) !== null;
+    return localStorage.getItem(LEGACY_STORAGE_KEY) !== null
   },
 
   /**
@@ -113,11 +113,11 @@ export const fileStorage = {
    */
   loadLegacyData(): StoredData | null {
     try {
-      const data = localStorage.getItem(LEGACY_STORAGE_KEY);
-      return data ? JSON.parse(data) : null;
+      const data = localStorage.getItem(LEGACY_STORAGE_KEY)
+      return data ? JSON.parse(data) : null
     } catch (e) {
-      console.error('Failed to load legacy data:', e);
-      return null;
+      console.error('Failed to load legacy data:', e)
+      return null
     }
   },
 
@@ -125,31 +125,31 @@ export const fileStorage = {
    * 旧データを削除
    */
   clearLegacyData(): void {
-    localStorage.removeItem(LEGACY_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_STORAGE_KEY)
   },
 
   /**
    * 旧データから新形式へマイグレーション
    */
   migrateFromLegacy(): FileIndex | null {
-    const legacyData = this.loadLegacyData();
-    if (!legacyData) return null;
+    const legacyData = this.loadLegacyData()
+    if (!legacyData) return null
 
-    const fileInfo = this.createFile('マイマインドマップ');
+    const fileInfo = this.createFile('マイマインドマップ')
     const index: FileIndex = {
       version: 1,
       files: [fileInfo],
       activeFileId: fileInfo.id,
-    };
+    }
 
     // 新形式で保存
-    this.saveIndex(index);
-    this.saveFileData(fileInfo.id, legacyData);
+    this.saveIndex(index)
+    this.saveFileData(fileInfo.id, legacyData)
 
     // 旧データを削除
-    this.clearLegacyData();
+    this.clearLegacyData()
 
-    return index;
+    return index
   },
 
   /**
@@ -157,26 +157,26 @@ export const fileStorage = {
    */
   initialize(): FileIndex {
     // 既に新形式がある場合はそれを使用
-    let index = this.loadIndex();
-    if (index) return index;
+    let index = this.loadIndex()
+    if (index) return index
 
     // 旧データがある場合はマイグレーション
     if (this.hasLegacyData()) {
-      const migratedIndex = this.migrateFromLegacy();
-      if (migratedIndex) return migratedIndex;
+      const migratedIndex = this.migrateFromLegacy()
+      if (migratedIndex) return migratedIndex
     }
 
     // 新規作成
-    const fileInfo = this.createFile('新しいマインドマップ');
+    const fileInfo = this.createFile('新しいマインドマップ')
     index = {
       version: 1,
       files: [fileInfo],
       activeFileId: fileInfo.id,
-    };
-    this.saveIndex(index);
-    return index;
+    }
+    this.saveIndex(index)
+    return index
   },
-};
+}
 
 /**
  * 後方互換性のための旧API（単一ファイル用）
@@ -185,23 +185,23 @@ export const fileStorage = {
 export const storage = {
   load(): StoredData | null {
     try {
-      const data = localStorage.getItem(LEGACY_STORAGE_KEY);
-      return data ? JSON.parse(data) : null;
+      const data = localStorage.getItem(LEGACY_STORAGE_KEY)
+      return data ? JSON.parse(data) : null
     } catch (e) {
-      console.error('Failed to load from localStorage:', e);
-      return null;
+      console.error('Failed to load from localStorage:', e)
+      return null
     }
   },
 
   save(data: StoredData): void {
     try {
-      localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(data));
+      localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(data))
     } catch (e) {
-      console.error('Failed to save to localStorage:', e);
+      console.error('Failed to save to localStorage:', e)
     }
   },
 
   clear(): void {
-    localStorage.removeItem(LEGACY_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_STORAGE_KEY)
   },
-};
+}

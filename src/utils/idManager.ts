@@ -3,18 +3,18 @@
  * マークダウン内のIDコメント形式: <!-- id:xxxxxxxx -->
  */
 
-const ID_COMMENT_REGEX = /<!--\s*id:([a-zA-Z0-9]+)\s*-->/;
+const ID_COMMENT_REGEX = /<!--\s*id:([a-zA-Z0-9]+)\s*-->/
 
 /**
  * 短いユニークIDを生成（8文字の英数字）
  */
 export function generateId(): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
+  let result = ''
   for (let i = 0; i < 8; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
+    result += chars.charAt(Math.floor(Math.random() * chars.length))
   }
-  return result;
+  return result
 }
 
 /**
@@ -23,8 +23,8 @@ export function generateId(): string {
  * @returns 抽出されたID、なければnull
  */
 export function extractId(text: string): string | null {
-  const match = text.match(ID_COMMENT_REGEX);
-  return match ? match[1] : null;
+  const match = text.match(ID_COMMENT_REGEX)
+  return match ? match[1] : null
 }
 
 /**
@@ -33,7 +33,7 @@ export function extractId(text: string): string | null {
  * @returns IDコメントを除去したテキスト
  */
 export function removeIdComment(text: string): string {
-  return text.replace(ID_COMMENT_REGEX, '').trim();
+  return text.replace(ID_COMMENT_REGEX, '').trim()
 }
 
 /**
@@ -45,10 +45,10 @@ export function removeIdComment(text: string): string {
 export function embedId(text: string, id: string): string {
   // 既存のIDコメントがあれば置換
   if (ID_COMMENT_REGEX.test(text)) {
-    return text.replace(ID_COMMENT_REGEX, `<!-- id:${id} -->`);
+    return text.replace(ID_COMMENT_REGEX, `<!-- id:${id} -->`)
   }
   // なければ末尾に追加
-  return `${text} <!-- id:${id} -->`;
+  return `${text} <!-- id:${id} -->`
 }
 
 /**
@@ -57,23 +57,23 @@ export function embedId(text: string, id: string): string {
  * @returns { text: IDコメント付きテキスト, id: 使用されたID }
  */
 export function ensureId(text: string): { text: string; id: string } {
-  const existingId = extractId(text);
+  const existingId = extractId(text)
   if (existingId) {
-    return { text, id: existingId };
+    return { text, id: existingId }
   }
-  const newId = generateId();
-  return { text: embedId(text, newId), id: newId };
+  const newId = generateId()
+  return { text: embedId(text, newId), id: newId }
 }
 
 /**
  * フラット化されたノード情報（マッチング用）
  */
 interface FlatNode {
-  text: string;
-  level: number;
-  index: number;
-  parentIndex: number | null;
-  siblingPosition: number;
+  text: string
+  level: number
+  index: number
+  parentIndex: number | null
+  siblingPosition: number
 }
 
 /**
@@ -82,26 +82,26 @@ interface FlatNode {
 function flattenTree(
   items: { text: string; level: number; children: unknown[] }[],
   parentIndex: number | null = null,
-  result: FlatNode[] = []
+  result: FlatNode[] = [],
 ): FlatNode[] {
   items.forEach((item, siblingPos) => {
-    const index = result.length;
+    const index = result.length
     result.push({
       text: item.text,
       level: item.level,
       index,
       parentIndex,
       siblingPosition: siblingPos,
-    });
+    })
     if ('children' in item && Array.isArray(item.children)) {
       flattenTree(
         item.children as { text: string; level: number; children: unknown[] }[],
         index,
-        result
-      );
+        result,
+      )
     }
-  });
-  return result;
+  })
+  return result
 }
 
 /**
@@ -119,85 +119,97 @@ export function matchNodes<
   T extends { id: string; text: string; level: number; children: T[] },
   U extends { text: string; level: number; children: U[] },
 >(oldItems: T[], newItems: U[]): Map<number, string> {
-  const oldFlat = flattenTree(oldItems as unknown as { text: string; level: number; children: unknown[] }[]);
-  const newFlat = flattenTree(newItems as unknown as { text: string; level: number; children: unknown[] }[]);
+  const oldFlat = flattenTree(
+    oldItems as unknown as {
+      text: string
+      level: number
+      children: unknown[]
+    }[],
+  )
+  const newFlat = flattenTree(
+    newItems as unknown as {
+      text: string
+      level: number
+      children: unknown[]
+    }[],
+  )
 
   // 既存ノードのIDを取得するヘルパー
   const getOldId = (flatIndex: number): string => {
-    let count = 0;
+    let count = 0
     const findId = (items: T[]): string | null => {
       for (const item of items) {
-        if (count === flatIndex) return item.id;
-        count++;
-        const found = findId(item.children);
-        if (found) return found;
+        if (count === flatIndex) return item.id
+        count++
+        const found = findId(item.children)
+        if (found) return found
       }
-      return null;
-    };
-    return findId(oldItems) ?? '';
-  };
+      return null
+    }
+    return findId(oldItems) ?? ''
+  }
 
-  const result = new Map<number, string>();
-  const usedOldIndices = new Set<number>();
+  const result = new Map<number, string>()
+  const usedOldIndices = new Set<number>()
 
   // Pass 1: 完全マッチ（テキスト + 親テキスト + 兄弟位置）
   for (const newNode of newFlat) {
     const newParentText =
-      newNode.parentIndex !== null ? newFlat[newNode.parentIndex].text : null;
+      newNode.parentIndex !== null ? newFlat[newNode.parentIndex].text : null
 
     for (const oldNode of oldFlat) {
-      if (usedOldIndices.has(oldNode.index)) continue;
+      if (usedOldIndices.has(oldNode.index)) continue
 
       const oldParentText =
-        oldNode.parentIndex !== null ? oldFlat[oldNode.parentIndex].text : null;
+        oldNode.parentIndex !== null ? oldFlat[oldNode.parentIndex].text : null
 
       if (
         newNode.text === oldNode.text &&
         newParentText === oldParentText &&
         newNode.siblingPosition === oldNode.siblingPosition
       ) {
-        result.set(newNode.index, getOldId(oldNode.index));
-        usedOldIndices.add(oldNode.index);
-        break;
+        result.set(newNode.index, getOldId(oldNode.index))
+        usedOldIndices.add(oldNode.index)
+        break
       }
     }
   }
 
   // Pass 2: テキスト + 親テキストマッチ
   for (const newNode of newFlat) {
-    if (result.has(newNode.index)) continue;
+    if (result.has(newNode.index)) continue
 
     const newParentText =
-      newNode.parentIndex !== null ? newFlat[newNode.parentIndex].text : null;
+      newNode.parentIndex !== null ? newFlat[newNode.parentIndex].text : null
 
     for (const oldNode of oldFlat) {
-      if (usedOldIndices.has(oldNode.index)) continue;
+      if (usedOldIndices.has(oldNode.index)) continue
 
       const oldParentText =
-        oldNode.parentIndex !== null ? oldFlat[oldNode.parentIndex].text : null;
+        oldNode.parentIndex !== null ? oldFlat[oldNode.parentIndex].text : null
 
       if (newNode.text === oldNode.text && newParentText === oldParentText) {
-        result.set(newNode.index, getOldId(oldNode.index));
-        usedOldIndices.add(oldNode.index);
-        break;
+        result.set(newNode.index, getOldId(oldNode.index))
+        usedOldIndices.add(oldNode.index)
+        break
       }
     }
   }
 
   // Pass 3: テキスト + レベルマッチ
   for (const newNode of newFlat) {
-    if (result.has(newNode.index)) continue;
+    if (result.has(newNode.index)) continue
 
     for (const oldNode of oldFlat) {
-      if (usedOldIndices.has(oldNode.index)) continue;
+      if (usedOldIndices.has(oldNode.index)) continue
 
       if (newNode.text === oldNode.text && newNode.level === oldNode.level) {
-        result.set(newNode.index, getOldId(oldNode.index));
-        usedOldIndices.add(oldNode.index);
-        break;
+        result.set(newNode.index, getOldId(oldNode.index))
+        usedOldIndices.add(oldNode.index)
+        break
       }
     }
   }
 
-  return result;
+  return result
 }

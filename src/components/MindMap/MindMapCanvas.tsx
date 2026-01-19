@@ -1,4 +1,4 @@
-import { useCallback, createContext, useContext } from 'react';
+import { useCallback, createContext, useContext } from 'react'
 import {
   ReactFlow,
   Controls,
@@ -8,31 +8,35 @@ import {
   type NodeTypes,
   type OnNodesChange,
   type OnSelectionChangeFunc,
-} from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
+} from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
 
-import { MindMapNode } from './MindMapNode';
-import { useMindMapStore } from '../../stores/mindMapStore';
-import { useConfigStore, type NodeStyle, type FontStyle } from '../../stores/configStore';
-import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
-import type { MindMapNodeData } from '../../types/mindMap';
-import './MindMapCanvas.css';
+import { MindMapNode } from './MindMapNode'
+import { useMindMapStore } from '../../stores/mindMapStore'
+import {
+  useConfigStore,
+  type NodeStyle,
+  type FontStyle,
+} from '../../stores/configStore'
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
+import type { MindMapNodeData } from '../../types/mindMap'
+import './MindMapCanvas.css'
 
 interface CanvasSettings {
-  nodeStyle: NodeStyle;
-  fontStyle: FontStyle;
+  nodeStyle: NodeStyle
+  fontStyle: FontStyle
 }
 
 export const CanvasSettingsContext = createContext<CanvasSettings>({
   nodeStyle: 'none',
   fontStyle: 'system',
-});
+})
 
-export const useCanvasSettings = () => useContext(CanvasSettingsContext);
+export const useCanvasSettings = () => useContext(CanvasSettingsContext)
 
 const nodeTypes: NodeTypes = {
   mindmap: MindMapNode,
-};
+}
 
 export function MindMapCanvas() {
   const {
@@ -43,61 +47,61 @@ export function MindMapCanvas() {
     recalculateLayout,
     setSelectedNodeId,
     setEditingNodeId,
-  } = useMindMapStore();
+  } = useMindMapStore()
 
-  const { backgroundStyle, nodeStyle, fontStyle } = useConfigStore();
+  const { backgroundStyle, nodeStyle, fontStyle } = useConfigStore()
 
   // キーボードショートカットを有効化
-  useKeyboardShortcuts();
+  useKeyboardShortcuts()
 
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => {
       changes.forEach((change) => {
         if (change.type === 'position' && change.position && !change.dragging) {
-          updateNodePosition(change.id, change.position);
+          updateNodePosition(change.id, change.position)
         }
-      });
+      })
     },
-    [updateNodePosition]
-  );
+    [updateNodePosition],
+  )
 
   const onNodeDragStop = useCallback(
     (_event: React.MouseEvent, node: Node) => {
-      updateNodePosition(node.id, node.position);
+      updateNodePosition(node.id, node.position)
     },
-    [updateNodePosition]
-  );
+    [updateNodePosition],
+  )
 
   const onNodeDoubleClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
-      const data = node.data as MindMapNodeData;
+      const data = node.data as MindMapNodeData
       if (data.hasChildren) {
-        toggleNodeExpanded(node.id);
+        toggleNodeExpanded(node.id)
       }
     },
-    [toggleNodeExpanded]
-  );
+    [toggleNodeExpanded],
+  )
 
   const onSelectionChange: OnSelectionChangeFunc = useCallback(
     ({ nodes: selectedNodes }) => {
       if (selectedNodes.length === 1) {
-        setSelectedNodeId(selectedNodes[0].id);
+        setSelectedNodeId(selectedNodes[0].id)
       } else if (selectedNodes.length === 0) {
-        setSelectedNodeId(null);
+        setSelectedNodeId(null)
       }
     },
-    [setSelectedNodeId]
-  );
+    [setSelectedNodeId],
+  )
 
   const onPaneClick = useCallback(() => {
-    setSelectedNodeId(null);
-    setEditingNodeId(null);
-  }, [setSelectedNodeId, setEditingNodeId]);
+    setSelectedNodeId(null)
+    setEditingNodeId(null)
+  }, [setSelectedNodeId, setEditingNodeId])
 
   const renderBackground = () => {
     switch (backgroundStyle) {
       case 'none':
-        return null;
+        return null
       case 'grid':
         return (
           <Background
@@ -106,7 +110,7 @@ export function MindMapCanvas() {
             color="rgba(200, 200, 200, 0.3)"
             lineWidth={1}
           />
-        );
+        )
       case 'ruled':
         return (
           <Background
@@ -115,7 +119,7 @@ export function MindMapCanvas() {
             color="rgba(200, 200, 200, 0.4)"
             lineWidth={1}
           />
-        );
+        )
       case 'dots':
         return (
           <Background
@@ -124,11 +128,11 @@ export function MindMapCanvas() {
             size={1.5}
             color="rgba(150, 150, 150, 0.5)"
           />
-        );
+        )
       default:
-        return null;
+        return null
     }
-  };
+  }
 
   return (
     <CanvasSettingsContext.Provider value={{ nodeStyle, fontStyle }}>
@@ -166,5 +170,5 @@ export function MindMapCanvas() {
         </ReactFlow>
       </div>
     </CanvasSettingsContext.Provider>
-  );
+  )
 }

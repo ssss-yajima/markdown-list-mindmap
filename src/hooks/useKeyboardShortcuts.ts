@@ -8,8 +8,8 @@
  * Escape: 編集キャンセル / 選択解除
  */
 
-import { useEffect, useCallback } from 'react';
-import { useMindMapStore } from '../stores/mindMapStore';
+import { useEffect, useCallback } from 'react'
+import { useMindMapStore } from '../stores/mindMapStore'
 
 export function useKeyboardShortcuts() {
   const {
@@ -21,65 +21,65 @@ export function useKeyboardShortcuts() {
     addSiblingNode,
     addSiblingNodeBefore,
     deleteNode,
-  } = useMindMapStore();
+  } = useMindMapStore()
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       // 編集中は特定のキーのみ処理
       if (editingNodeId) {
         if (e.key === 'Escape') {
-          setEditingNodeId(null);
+          setEditingNodeId(null)
         }
-        return;
+        return
       }
 
       // ノードが選択されていない場合は何もしない
-      if (!selectedNodeId) return;
+      if (!selectedNodeId) return
 
       // 入力フォーカスがある場合は処理しない（テキストエリア等）
-      const activeElement = document.activeElement;
+      const activeElement = document.activeElement
       if (
         activeElement instanceof HTMLInputElement ||
         activeElement instanceof HTMLTextAreaElement
       ) {
-        return;
+        return
       }
 
       switch (e.key) {
         case 'Tab':
-          e.preventDefault();
-          addChildNode(selectedNodeId);
-          break;
+          e.preventDefault()
+          addChildNode(selectedNodeId)
+          break
 
         case 'Enter':
-          e.preventDefault();
+          e.preventDefault()
           if (e.shiftKey) {
-            addSiblingNodeBefore(selectedNodeId); // 上に追加
+            addSiblingNodeBefore(selectedNodeId) // 上に追加
           } else {
-            addSiblingNode(selectedNodeId); // 下に追加
+            addSiblingNode(selectedNodeId) // 下に追加
           }
-          break;
+          break
 
         case 'Backspace':
         case 'Delete':
           if (e.metaKey || e.ctrlKey) {
-            e.preventDefault();
-            deleteNode(selectedNodeId);
+            e.preventDefault()
+            deleteNode(selectedNodeId)
           }
-          break;
+          break
 
         case 'F2':
-          e.preventDefault();
-          setEditingNodeId(selectedNodeId);
-          break;
+          e.preventDefault()
+          setEditingNodeId(selectedNodeId)
+          break
 
         case 'Escape':
-          e.preventDefault();
-          setSelectedNodeId(null);
-          break;
+          e.preventDefault()
+          setSelectedNodeId(null)
+          break
 
         default:
-          break;
+          break
       }
     },
     [
@@ -91,13 +91,13 @@ export function useKeyboardShortcuts() {
       addSiblingNode,
       addSiblingNodeBefore,
       deleteNode,
-    ]
-  );
+    ],
+  )
 
   useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown)
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [handleKeyDown]);
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [handleKeyDown])
 }
