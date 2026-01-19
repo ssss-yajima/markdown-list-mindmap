@@ -19,7 +19,7 @@ export interface RegenerateResult {
 export function regenerateFromTree(
   items: ListItem[],
   metadata: MindMapMetadata,
-  preservePositions: boolean = false
+  preservePositions = false
 ): RegenerateResult {
   const markdown = treeToMarkdown(items, { embedIds: true });
   const displayMarkdown = treeToMarkdown(items, { embedIds: false });

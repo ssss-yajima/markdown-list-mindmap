@@ -34,7 +34,7 @@ export function createNodeOperationsSlice(
       set({ editingNodeId: nodeId });
     },
 
-    addChildNode: (parentId: string, text: string = '新しいノード') => {
+    addChildNode: (parentId: string, text = '新しいノード') => {
       const { parsed, metadata } = get();
       if (!parsed) return null;
 
@@ -61,7 +61,7 @@ export function createNodeOperationsSlice(
       }
     },
 
-    addSiblingNode: (siblingId: string, text: string = '新しいノード') => {
+    addSiblingNode: (siblingId: string, text = '新しいノード') => {
       const { parsed, metadata } = get();
       if (!parsed) return null;
 
@@ -88,7 +88,7 @@ export function createNodeOperationsSlice(
       }
     },
 
-    addSiblingNodeBefore: (siblingId: string, text: string = '新しいノード') => {
+    addSiblingNodeBefore: (siblingId: string, text = '新しいノード') => {
       const { parsed, metadata } = get();
       if (!parsed) return null;
 
