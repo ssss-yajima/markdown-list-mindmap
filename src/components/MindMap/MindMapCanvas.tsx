@@ -1,4 +1,4 @@
-import { useCallback, createContext, useContext } from 'react'
+import { useCallback } from 'react'
 import {
   ReactFlow,
   Controls,
@@ -13,26 +13,11 @@ import '@xyflow/react/dist/style.css'
 
 import { MindMapNode } from './MindMapNode'
 import { useMindMapStore } from '../../stores/mindMapStore'
-import {
-  useConfigStore,
-  type NodeStyle,
-  type FontStyle,
-} from '../../stores/configStore'
+import { useConfigStore } from '../../stores/configStore'
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
+import { CanvasSettingsProvider } from '../../contexts/CanvasSettingsContext'
 import type { MindMapNodeData } from '../../types/mindMap'
 import './MindMapCanvas.css'
-
-interface CanvasSettings {
-  nodeStyle: NodeStyle
-  fontStyle: FontStyle
-}
-
-export const CanvasSettingsContext = createContext<CanvasSettings>({
-  nodeStyle: 'none',
-  fontStyle: 'system',
-})
-
-export const useCanvasSettings = () => useContext(CanvasSettingsContext)
 
 const nodeTypes: NodeTypes = {
   mindmap: MindMapNode,
@@ -49,7 +34,7 @@ export function MindMapCanvas() {
     setEditingNodeId,
   } = useMindMapStore()
 
-  const { backgroundStyle, nodeStyle, fontStyle } = useConfigStore()
+  const { backgroundStyle } = useConfigStore()
 
   // キーボードショートカットを有効化
   useKeyboardShortcuts()
@@ -135,7 +120,7 @@ export function MindMapCanvas() {
   }
 
   return (
-    <CanvasSettingsContext.Provider value={{ nodeStyle, fontStyle }}>
+    <CanvasSettingsProvider>
       <div className="mindmap-canvas">
         <div className="canvas-toolbar">
           <button onClick={recalculateLayout} className="toolbar-button">
@@ -169,6 +154,6 @@ export function MindMapCanvas() {
           {renderBackground()}
         </ReactFlow>
       </div>
-    </CanvasSettingsContext.Provider>
+    </CanvasSettingsProvider>
   )
 }

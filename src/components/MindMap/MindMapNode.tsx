@@ -2,7 +2,7 @@ import { memo, useState, useRef, useEffect, useCallback } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import type { MindMapNode as MindMapNodeType } from '../../types/mindMap'
 import { useMindMapStore } from '../../stores/mindMapStore'
-import { useCanvasSettings } from './MindMapCanvas'
+import { useCanvasSettings } from '../../contexts/CanvasSettingsContext'
 import './MindMapNode.css'
 
 export const MindMapNode = memo(function MindMapNode({
