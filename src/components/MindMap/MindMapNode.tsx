@@ -16,11 +16,9 @@ export const MindMapNode = memo(function MindMapNode({
   const {
     editingNodeId,
     setEditingNodeId,
-    setSelectedNodeId,
     addChildNode,
     addSiblingNode,
     addSiblingNodeBefore,
-    deleteNode,
     updateNodeText,
     toggleNodeExpanded,
   } = useMindMapStore()
@@ -135,72 +133,10 @@ export const MindMapNode = memo(function MindMapNode({
     [id, hasChildren, toggleNodeExpanded],
   )
 
-  // 選択状態（非編集時）のキーボード操作
-  const handleNodeKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      // 編集中は別のハンドラーで処理
-      if (isEditing) return
-
-      switch (e.key) {
-        case 'F2':
-          e.preventDefault()
-          e.stopPropagation()
-          setEditingNodeId(id)
-          break
-
-        case 'Enter':
-          e.preventDefault()
-          e.stopPropagation()
-          if (e.shiftKey) {
-            addSiblingNodeBefore(id) // 上に追加
-          } else {
-            addSiblingNode(id) // 下に追加
-          }
-          break
-
-        case 'Tab':
-          e.preventDefault()
-          e.stopPropagation()
-          addChildNode(id)
-          break
-
-        case 'Backspace':
-        case 'Delete':
-          if (e.metaKey || e.ctrlKey) {
-            e.preventDefault()
-            e.stopPropagation()
-            deleteNode(id)
-          }
-          break
-
-        case 'Escape':
-          e.preventDefault()
-          e.stopPropagation()
-          setSelectedNodeId(null)
-          break
-
-        default:
-          break
-      }
-    },
-    [
-      isEditing,
-      id,
-      setEditingNodeId,
-      setSelectedNodeId,
-      addChildNode,
-      addSiblingNode,
-      addSiblingNodeBefore,
-      deleteNode,
-    ],
-  )
-
   return (
     <div
       className={`mindmap-node level-${level} ${selected ? 'selected' : ''} ${isEditing ? 'editing' : ''} style-${nodeStyle} font-${fontStyle}`}
       onDoubleClick={handleDoubleClick}
-      onKeyDown={handleNodeKeyDown}
-      tabIndex={0}
     >
       {level > 0 && <Handle type="target" position={Position.Left} />}
 
