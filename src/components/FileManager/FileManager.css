@@ -74,14 +74,6 @@
   background-color: #5a6fd6;
 }
 
-.file-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  opacity: 0.7;
-}
-
 .file-name {
   flex: 1;
   font-size: 13px;
@@ -126,6 +118,47 @@
 
 .file-list-item.active .file-delete-btn:hover {
   background-color: rgba(255, 255, 255, 0.2);
+}
+
+.file-list-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.file-bulk-delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background-color: #dc3545;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.file-bulk-delete-btn:hover {
+  background-color: #c82333;
+}
+
+.file-select-checkbox {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+.file-list-item.selected {
+  background-color: #e8ecfd;
+}
+
+.file-list-item.selected:hover {
+  background-color: #dce1fa;
 }
 
 .file-list-loading {

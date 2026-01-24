@@ -9,6 +9,7 @@ interface FileStoreState {
   initialize: () => void
   createFile: (name?: string) => FileInfo
   deleteFile: (fileId: string) => boolean
+  deleteFiles: (fileIds: string[]) => boolean
   renameFile: (fileId: string, newName: string) => void
   setActiveFile: (fileId: string) => void
   updateFileTimestamp: (fileId: string) => void
@@ -32,7 +33,7 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
 
   createFile: (name?: string) => {
     const { index } = get()
-    const fileName = name || `新しいマインドマップ ${index.files.length + 1}`
+    const fileName = name || `Untitled ${index.files.length + 1}`
     const fileInfo = fileStorage.createFile(fileName)
 
     const newIndex: FileIndex = {
@@ -80,6 +81,40 @@ export const useFileStore = create<FileStoreState>((set, get) => ({
 
     // ファイルデータを削除
     fileStorage.deleteFileData(fileId)
+    fileStorage.saveIndex(newIndex)
+    set({ index: newIndex })
+
+    return true
+  },
+
+  deleteFiles: (fileIds: string[]) => {
+    const { index } = get()
+
+    const deleteSet = new Set(fileIds)
+    const remainingFiles = index.files.filter((f) => !deleteSet.has(f.id))
+
+    // 最低1ファイル残ることを確認
+    if (remainingFiles.length === 0) {
+      return false
+    }
+
+    // アクティブファイルが削除対象の場合、残りの先頭を新アクティブに設定
+    let newActiveFileId = index.activeFileId
+    if (newActiveFileId && deleteSet.has(newActiveFileId)) {
+      newActiveFileId = remainingFiles[0].id
+    }
+
+    const newIndex: FileIndex = {
+      ...index,
+      files: remainingFiles,
+      activeFileId: newActiveFileId,
+    }
+
+    // 各ファイルのLocalStorageデータを削除
+    for (const fileId of fileIds) {
+      fileStorage.deleteFileData(fileId)
+    }
+
     fileStorage.saveIndex(newIndex)
     set({ index: newIndex })
 

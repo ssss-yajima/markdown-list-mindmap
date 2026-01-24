@@ -19,6 +19,10 @@ GitHub Actions (`.github/workflows/ci.yml`) で push/PR 時に自動実行:
 - build
 - test-e2e
 
+## UI Language
+
+All UI labels and messages should be in English (not Japanese).
+
 ## Architecture
 
 - **State Management**: Zustand store (`src/stores/`)
