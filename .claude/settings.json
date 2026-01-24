@@ -8,7 +8,8 @@
       "Bash(task:*)",
       "Bash(uv:*)",
       "Read(**)",
-      "Edit(~/projects/**)",
+      "Edit(~/go/**)",
+      "Write(~/go/**)",
       "WebFetch(domain:*)"
     ]
   },
