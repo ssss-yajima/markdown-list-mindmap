@@ -2,3 +2,4 @@ export { createNodeOperationsSlice, type NodeOperationsSlice } from './nodeOpera
 export { createLayoutSlice, type LayoutSlice } from './layoutSlice';
 export { createFileSlice, type FileSlice } from './fileSlice';
 export { createMarkdownSlice, type MarkdownSlice } from './markdownSlice';
+export { createViewportSlice, type ViewportSlice } from './viewportSlice';

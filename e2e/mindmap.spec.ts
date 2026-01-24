@@ -4,7 +4,14 @@ test.describe('Markdown Mind Map', () => {
   test.beforeEach(async ({ page }) => {
     // LocalStorageをクリアして初期状態に
     await page.goto('/')
-    await page.evaluate(() => localStorage.clear())
+    await page.evaluate(() => {
+      localStorage.clear()
+      // テスト用にautoCenterを無効化
+      localStorage.setItem('mindmap-config', JSON.stringify({
+        state: { backgroundStyle: 'grid', nodeStyle: 'none', fontStyle: 'system', autoCenterEnabled: false },
+        version: 0
+      }))
+    })
     await page.reload()
   })
 
@@ -92,9 +99,9 @@ test.describe('Markdown Mind Map', () => {
     expect(nodeCount).toBeLessThanOrEqual(1)
   })
 
-  test('レイアウト再計算ボタン', async ({ page }) => {
-    // レイアウト再計算ボタンをクリック
-    const button = page.getByRole('button', { name: 'レイアウト再計算' })
+  test('Auto Layoutボタン', async ({ page }) => {
+    // Auto Layoutボタンをクリック
+    const button = page.getByRole('button', { name: 'Auto Layout' })
     await expect(button).toBeVisible()
     await button.click()
 

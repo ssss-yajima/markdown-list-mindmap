@@ -42,6 +42,7 @@ export function treeToFlow(
         hasChildren: item.children.length > 0,
         expanded: isExpanded,
         direction: item.level > 0 ? direction : undefined,
+        lineNumber: item.lineNumber,
       },
     }
     nodes.push(node)

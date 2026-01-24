@@ -38,6 +38,7 @@ export interface MindMapNodeData extends Record<string, unknown> {
   hasChildren: boolean
   expanded: boolean
   direction?: LayoutDirection // 表示用
+  lineNumber: number
 }
 
 /**
