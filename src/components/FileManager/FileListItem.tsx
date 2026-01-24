@@ -5,18 +5,22 @@ interface FileListItemProps {
   file: FileInfo
   isActive: boolean
   canDelete: boolean
+  isSelected: boolean
   onSelect: (fileId: string) => void
   onRename: (fileId: string, newName: string) => void
   onDelete: (fileId: string) => void
+  onToggleSelect: (fileId: string) => void
 }
 
 export function FileListItem({
   file,
   isActive,
   canDelete,
+  isSelected,
   onSelect,
   onRename,
   onDelete,
+  onToggleSelect,
 }: FileListItemProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editName, setEditName] = useState(file.name)
@@ -57,16 +61,18 @@ export function FileListItem({
   const handleDeleteClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation()
-      if (canDelete && window.confirm(`"${file.name}" を削除しますか？`)) {
+      if (canDelete && window.confirm(`Delete "${file.name}"?`)) {
         onDelete(file.id)
       }
     },
     [canDelete, file.id, file.name, onDelete],
   )
 
+  const className = `file-list-item ${isActive ? 'active' : ''} ${isSelected ? 'selected' : ''}`
+
   return (
     <div
-      className={`file-list-item ${isActive ? 'active' : ''}`}
+      className={className}
       onClick={() => onSelect(file.id)}
       onDoubleClick={handleDoubleClick}
     >
@@ -83,17 +89,19 @@ export function FileListItem({
         />
       ) : (
         <>
-          <span className="file-icon">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z" />
-            </svg>
-          </span>
+          <input
+            type="checkbox"
+            className="file-select-checkbox"
+            checked={isSelected}
+            onChange={() => onToggleSelect(file.id)}
+            onClick={(e) => e.stopPropagation()}
+          />
           <span className="file-name">{file.name}</span>
           {canDelete && (
             <button
               className="file-delete-btn"
               onClick={handleDeleteClick}
-              title="削除"
+              title="Delete"
             >
               <svg
                 width="14"
