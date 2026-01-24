@@ -7,10 +7,12 @@ import {
   createLayoutSlice,
   createFileSlice,
   createMarkdownSlice,
+  createViewportSlice,
   type NodeOperationsSlice,
   type LayoutSlice,
   type FileSlice,
   type MarkdownSlice,
+  type ViewportSlice,
 } from './slices'
 
 // 状態の型定義
@@ -32,6 +34,7 @@ export type MindMapState = MindMapStateBase
   & LayoutSlice
   & FileSlice
   & MarkdownSlice
+  & ViewportSlice
 
 const INITIAL_METADATA: MindMapMetadata = {
   version: 1,
@@ -68,6 +71,7 @@ export const useMindMapStore = create<MindMapState>((set, get) => ({
   ...createLayoutSlice(set, get),
   ...createFileSlice(set, get, SAMPLE_MARKDOWN),
   ...createNodeOperationsSlice(set, get),
+  ...createViewportSlice(set),
 }))
 
 // 型エクスポート（外部使用向け）

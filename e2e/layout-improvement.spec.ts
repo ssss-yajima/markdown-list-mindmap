@@ -66,7 +66,14 @@ test.describe('Layout Improvement', () => {
   test.beforeEach(async ({ page }) => {
     // LocalStorageをクリアして新規状態から開始
     await page.goto('/markdown-list-mindmap/')
-    await page.evaluate(() => localStorage.clear())
+    await page.evaluate(() => {
+      localStorage.clear()
+      // テスト用にautoCenterを無効化
+      localStorage.setItem('mindmap-config', JSON.stringify({
+        state: { backgroundStyle: 'grid', nodeStyle: 'none', fontStyle: 'system', autoCenterEnabled: false },
+        version: 0
+      }))
+    })
     await page.reload()
   })
 
@@ -216,7 +223,7 @@ test.describe('Layout Improvement', () => {
     }
   })
 
-  test('レイアウト再計算前後で大きな差がない', async ({ page }) => {
+  test('Auto Layout前後で大きな差がない', async ({ page }) => {
     const textarea = page.locator('textarea')
 
     // マークダウンを入力
@@ -230,7 +237,7 @@ test.describe('Layout Improvement', () => {
 
     await page.waitForTimeout(500)
 
-    // レイアウト再計算前の位置を取得
+    // Auto Layout前の位置を取得
     const positionsBefore = await page.evaluate(() => {
       const nodes = document.querySelectorAll('.react-flow__node')
       return Array.from(nodes).map((node) => {
@@ -247,12 +254,12 @@ test.describe('Layout Improvement', () => {
       })
     })
 
-    // レイアウト再計算ボタンをクリック
-    const recalcButton = page.getByRole('button', { name: 'レイアウト再計算' })
+    // Auto Layoutボタンをクリック
+    const recalcButton = page.getByRole('button', { name: 'Auto Layout' })
     await recalcButton.click()
     await page.waitForTimeout(500)
 
-    // レイアウト再計算後の位置を取得
+    // Auto Layout後の位置を取得
     const positionsAfter = await page.evaluate(() => {
       const nodes = document.querySelectorAll('.react-flow__node')
       return Array.from(nodes).map((node) => {
@@ -346,7 +353,14 @@ test.describe('Layout Improvement', () => {
 test.describe('日本語長文テキストの高さ計算', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/markdown-list-mindmap/')
-    await page.evaluate(() => localStorage.clear())
+    await page.evaluate(() => {
+      localStorage.clear()
+      // テスト用にautoCenterを無効化
+      localStorage.setItem('mindmap-config', JSON.stringify({
+        state: { backgroundStyle: 'grid', nodeStyle: 'none', fontStyle: 'system', autoCenterEnabled: false },
+        version: 0
+      }))
+    })
     await page.reload()
   })
 
@@ -403,7 +417,14 @@ test.describe('ドラッグ後の衝突解消', () => {
   test.beforeEach(async ({ page }) => {
     // LocalStorageをクリアして新規状態から開始
     await page.goto('/markdown-list-mindmap/')
-    await page.evaluate(() => localStorage.clear())
+    await page.evaluate(() => {
+      localStorage.clear()
+      // テスト用にautoCenterを無効化
+      localStorage.setItem('mindmap-config', JSON.stringify({
+        state: { backgroundStyle: 'grid', nodeStyle: 'none', fontStyle: 'system', autoCenterEnabled: false },
+        version: 0
+      }))
+    })
     await page.reload()
   })
 

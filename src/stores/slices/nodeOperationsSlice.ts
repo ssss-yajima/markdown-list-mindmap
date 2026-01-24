@@ -51,6 +51,7 @@ export function createNodeOperationsSlice(
           ...result,
           selectedNodeId: newNodeId,
           editingNodeId: newNodeId,
+          centerTargetNodeId: newNodeId,
         });
 
         get().saveToStorage();
@@ -78,6 +79,7 @@ export function createNodeOperationsSlice(
           ...result,
           selectedNodeId: newNodeId,
           editingNodeId: newNodeId,
+          centerTargetNodeId: newNodeId,
         });
 
         get().saveToStorage();
@@ -105,6 +107,7 @@ export function createNodeOperationsSlice(
           ...result,
           selectedNodeId: newNodeId,
           editingNodeId: newNodeId,
+          centerTargetNodeId: newNodeId,
         });
 
         get().saveToStorage();

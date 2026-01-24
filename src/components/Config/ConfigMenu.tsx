@@ -15,9 +15,11 @@ export function ConfigMenu() {
     backgroundStyle,
     nodeStyle,
     fontStyle,
+    autoCenterEnabled,
     setBackgroundStyle,
     setNodeStyle,
     setFontStyle,
+    setAutoCenterEnabled,
   } = useConfigStore()
 
   useEffect(() => {
@@ -126,6 +128,18 @@ export function ConfigMenu() {
                 <span>{option.label}</span>
               </label>
             ))}
+          </div>
+
+          <div className="config-section">
+            <h3 className="config-section-title">Auto Center</h3>
+            <label className="config-option">
+              <input
+                type="checkbox"
+                checked={autoCenterEnabled}
+                onChange={(e) => setAutoCenterEnabled(e.target.checked)}
+              />
+              <span>Enable auto-centering</span>
+            </label>
           </div>
         </div>
       )}

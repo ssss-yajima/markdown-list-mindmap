@@ -30,6 +30,7 @@ export function treeToFlow(
         level: item.level,
         hasChildren: item.children.length > 0,
         expanded: isExpanded,
+        lineNumber: item.lineNumber,
       },
     }
     nodes.push(node)

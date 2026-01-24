@@ -2,6 +2,7 @@ import { useCallback, useState, useEffect, useRef } from 'react'
 import { useMindMapStore } from '../../stores/mindMapStore'
 import { useDebounce } from '../../hooks/useDebounce'
 import { useMarkdownEditorKeyboard } from '../../hooks/useMarkdownEditorKeyboard'
+import { useEditorCenter } from '../../hooks/useEditorCenter'
 import './MarkdownEditor.css'
 
 export function MarkdownEditor() {
@@ -23,6 +24,11 @@ export function MarkdownEditor() {
     textareaRef,
     value: localValue,
     onChange: handleValueChange,
+  })
+
+  useEditorCenter({
+    textareaRef,
+    value: localValue,
   })
 
   useEffect(() => {

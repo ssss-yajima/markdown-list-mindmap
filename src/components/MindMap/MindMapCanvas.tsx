@@ -12,6 +12,7 @@ import {
 import '@xyflow/react/dist/style.css'
 
 import { MindMapNode } from './MindMapNode'
+import { ViewportController } from './ViewportController'
 import { useMindMapStore } from '../../stores/mindMapStore'
 import { useConfigStore } from '../../stores/configStore'
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
@@ -150,6 +151,7 @@ export function MindMapCanvas() {
           selectionKeyCode={null}
           disableKeyboardA11y={true}
         >
+          <ViewportController />
           <Controls />
           {renderBackground()}
         </ReactFlow>

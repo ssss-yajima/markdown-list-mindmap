@@ -31,6 +31,7 @@ export interface MindMapNodeData extends Record<string, unknown> {
   level: number
   hasChildren: boolean
   expanded: boolean
+  lineNumber: number
 }
 
 /**
