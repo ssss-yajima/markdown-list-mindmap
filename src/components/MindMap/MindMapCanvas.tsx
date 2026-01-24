@@ -4,6 +4,7 @@ import {
   Controls,
   Background,
   BackgroundVariant,
+  SelectionMode,
   type Node,
   type NodeTypes,
   type OnNodesChange,
@@ -29,9 +30,11 @@ export function MindMapCanvas() {
     nodes,
     edges,
     updateNodePosition,
+    updateNodePositions,
     toggleNodeExpanded,
     recalculateLayout,
     setSelectedNodeId,
+    setSelectedNodeIds,
     setEditingNodeId,
   } = useMindMapStore()
 
@@ -40,22 +43,23 @@ export function MindMapCanvas() {
   // キーボードショートカットを有効化
   useKeyboardShortcuts()
 
-  const onNodesChange: OnNodesChange = useCallback(
-    (changes) => {
-      changes.forEach((change) => {
-        if (change.type === 'position' && change.position && !change.dragging) {
-          updateNodePosition(change.id, change.position)
-        }
-      })
-    },
-    [updateNodePosition],
-  )
+  const onNodesChange: OnNodesChange = useCallback(() => {
+    // ノード位置の保存はonNodeDragStopで処理
+  }, [])
 
   const onNodeDragStop = useCallback(
-    (_event: React.MouseEvent, node: Node) => {
-      updateNodePosition(node.id, node.position)
+    (_event: React.MouseEvent, node: Node, draggedNodes: Node[]) => {
+      if (draggedNodes.length > 1) {
+        const updates = draggedNodes.map((n) => ({
+          id: n.id,
+          position: n.position,
+        }))
+        updateNodePositions(updates)
+      } else {
+        updateNodePosition(node.id, node.position)
+      }
     },
-    [updateNodePosition],
+    [updateNodePosition, updateNodePositions],
   )
 
   const onNodeDoubleClick = useCallback(
@@ -72,11 +76,13 @@ export function MindMapCanvas() {
     ({ nodes: selectedNodes }) => {
       if (selectedNodes.length === 1) {
         setSelectedNodeId(selectedNodes[0].id)
-      } else if (selectedNodes.length === 0) {
+      } else if (selectedNodes.length > 1) {
+        setSelectedNodeIds(selectedNodes.map((n) => n.id))
+      } else {
         setSelectedNodeId(null)
       }
     },
-    [setSelectedNodeId],
+    [setSelectedNodeId, setSelectedNodeIds],
   )
 
   const onPaneClick = useCallback(() => {
@@ -146,7 +152,11 @@ export function MindMapCanvas() {
           defaultEdgeOptions={{
             type: 'bezier',
           }}
-          selectNodesOnDrag={false}
+          selectionOnDrag={true}
+          selectionMode={SelectionMode.Partial}
+          panOnDrag={[2]}
+          panOnScroll={true}
+          zoomOnScroll={false}
           deleteKeyCode={null}
           selectionKeyCode={null}
           disableKeyboardA11y={true}

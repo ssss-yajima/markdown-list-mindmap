@@ -268,6 +268,55 @@ export function getAllNodeIds(items: ListItem[]): string[] {
 }
 
 /**
+ * 祖先が選択に含まれるノードを除外し、冗長な選択を排除する
+ */
+export function filterRedundantNodes(
+  items: ListItem[],
+  nodeIds: string[],
+): string[] {
+  const idSet = new Set(nodeIds)
+
+  function isAncestorSelected(
+    targetId: string,
+    tree: ListItem[],
+    ancestors: string[],
+  ): boolean {
+    for (const item of tree) {
+      if (item.id === targetId) {
+        return ancestors.some((a) => idSet.has(a))
+      }
+      if (
+        isAncestorSelected(targetId, item.children, [...ancestors, item.id])
+      ) {
+        return true
+      }
+    }
+    return false
+  }
+
+  return nodeIds.filter((id) => !isAncestorSelected(id, items, []))
+}
+
+/**
+ * 複数ノードを一括削除
+ * filterRedundantNodesで冗長削除を防止してから削除する
+ */
+export function deleteNodes(items: ListItem[], nodeIds: string[]): ListItem[] {
+  const targetIds = new Set(filterRedundantNodes(items, nodeIds))
+
+  function removeFromTree(tree: ListItem[]): ListItem[] {
+    return tree
+      .filter((item) => !targetIds.has(item.id))
+      .map((item) => ({
+        ...item,
+        children: removeFromTree(item.children),
+      }))
+  }
+
+  return removeFromTree(items)
+}
+
+/**
  * ノード数をカウント
  */
 export function countNodes(items: ListItem[]): number {

@@ -14,6 +14,7 @@ import { useMindMapStore } from '../stores/mindMapStore'
 export function useKeyboardShortcuts() {
   const {
     selectedNodeId,
+    selectedNodeIds,
     editingNodeId,
     setSelectedNodeId,
     setEditingNodeId,
@@ -21,6 +22,7 @@ export function useKeyboardShortcuts() {
     addSiblingNode,
     addSiblingNodeBefore,
     deleteNode,
+    deleteNodes,
   } = useMindMapStore()
 
   const handleKeyDown = useCallback(
@@ -33,9 +35,6 @@ export function useKeyboardShortcuts() {
         return
       }
 
-      // ノードが選択されていない場合は何もしない
-      if (!selectedNodeId) return
-
       // 入力フォーカスがある場合は処理しない（テキストエリア等）
       const activeElement = document.activeElement
       if (
@@ -44,6 +43,29 @@ export function useKeyboardShortcuts() {
       ) {
         return
       }
+
+      // 複数選択時の処理
+      if (selectedNodeIds.length > 1) {
+        switch (e.key) {
+          case 'Backspace':
+          case 'Delete':
+            if (e.metaKey || e.ctrlKey) {
+              e.preventDefault()
+              deleteNodes(selectedNodeIds)
+            }
+            break
+          case 'Escape':
+            e.preventDefault()
+            setSelectedNodeId(null)
+            break
+          default:
+            break
+        }
+        return
+      }
+
+      // 単一選択時の処理
+      if (!selectedNodeId) return
 
       switch (e.key) {
         case 'Tab':
@@ -54,9 +76,9 @@ export function useKeyboardShortcuts() {
         case 'Enter':
           e.preventDefault()
           if (e.shiftKey) {
-            addSiblingNodeBefore(selectedNodeId) // 上に追加
+            addSiblingNodeBefore(selectedNodeId)
           } else {
-            addSiblingNode(selectedNodeId) // 下に追加
+            addSiblingNode(selectedNodeId)
           }
           break
 
@@ -84,6 +106,7 @@ export function useKeyboardShortcuts() {
     },
     [
       selectedNodeId,
+      selectedNodeIds,
       editingNodeId,
       setSelectedNodeId,
       setEditingNodeId,
@@ -91,6 +114,7 @@ export function useKeyboardShortcuts() {
       addSiblingNode,
       addSiblingNodeBefore,
       deleteNode,
+      deleteNodes,
     ],
   )
 
