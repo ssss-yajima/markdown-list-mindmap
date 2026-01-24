@@ -107,3 +107,13 @@
   border: 1px solid var(--color-border-light);
   border-radius: 0;
 }
+
+.react-flow__selection {
+  background: rgba(100, 150, 230, 0.1);
+  border: 1px solid rgba(100, 150, 230, 0.6);
+}
+
+.react-flow__node.selected {
+  outline: 2px solid rgba(100, 150, 230, 0.8);
+  outline-offset: 2px;
+}

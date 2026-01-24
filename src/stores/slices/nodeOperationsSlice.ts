@@ -5,6 +5,7 @@ import {
   addSiblingNode as treeAddSibling,
   addSiblingNodeBefore as treeAddSiblingBefore,
   deleteNode as treeDelete,
+  deleteNodes as treeDeleteNodes,
   updateNodeText as treeUpdateText,
 } from '../../utils/treeOperations';
 
@@ -13,11 +14,13 @@ type GetState = () => MindMapState;
 
 export interface NodeOperationsSlice {
   setSelectedNodeId: (nodeId: string | null) => void;
+  setSelectedNodeIds: (nodeIds: string[]) => void;
   setEditingNodeId: (nodeId: string | null) => void;
   addChildNode: (parentId: string, text?: string) => string | null;
   addSiblingNode: (siblingId: string, text?: string) => string | null;
   addSiblingNodeBefore: (siblingId: string, text?: string) => string | null;
   deleteNode: (nodeId: string) => void;
+  deleteNodes: (nodeIds: string[]) => void;
   updateNodeText: (nodeId: string, text: string) => void;
 }
 
@@ -27,7 +30,23 @@ export function createNodeOperationsSlice(
 ): NodeOperationsSlice {
   return {
     setSelectedNodeId: (nodeId: string | null) => {
-      set({ selectedNodeId: nodeId });
+      if (nodeId === null) {
+        const { nodes } = get();
+        set({
+          selectedNodeId: null,
+          selectedNodeIds: [],
+          nodes: nodes.map(n => n.selected ? { ...n, selected: false } : n),
+        });
+      } else {
+        set({ selectedNodeId: nodeId, selectedNodeIds: [nodeId] });
+      }
+    },
+
+    setSelectedNodeIds: (nodeIds: string[]) => {
+      set({
+        selectedNodeIds: nodeIds,
+        selectedNodeId: nodeIds.length === 1 ? nodeIds[0] : null,
+      });
     },
 
     setEditingNodeId: (nodeId: string | null) => {
@@ -142,6 +161,27 @@ export function createNodeOperationsSlice(
         get().saveToStorage();
       } catch {
         console.error('Failed to delete node');
+      }
+    },
+
+    deleteNodes: (nodeIds: string[]) => {
+      const { parsed, metadata } = get();
+      if (!parsed || nodeIds.length === 0) return;
+
+      try {
+        const newItems = treeDeleteNodes(parsed.items, nodeIds);
+        const result = regenerateFromTree(newItems, metadata, true);
+
+        set({
+          ...result,
+          selectedNodeId: null,
+          selectedNodeIds: [],
+          editingNodeId: null,
+        });
+
+        get().saveToStorage();
+      } catch {
+        console.error('Failed to delete nodes');
       }
     },
 

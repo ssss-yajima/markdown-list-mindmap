@@ -22,6 +22,7 @@ interface MindMapStateBase {
   nodes: MindMapNode[]
   edges: MindMapEdge[]
   selectedNodeId: string | null
+  selectedNodeIds: string[]
   editingNodeId: string | null
   activeFileId: string | null // 現在編集中のファイルID
 }
@@ -60,6 +61,7 @@ export const useMindMapStore = create<MindMapState>((set, get) => ({
   nodes: [],
   edges: [],
   selectedNodeId: null,
+  selectedNodeIds: [],
   editingNodeId: null,
   activeFileId: null,
 

@@ -34,6 +34,7 @@ type GetState = () => MindMapState;
 
 export interface LayoutSlice {
   updateNodePosition: (nodeId: string, position: XYPosition) => void;
+  updateNodePositions: (updates: { id: string; position: XYPosition }[]) => void;
   toggleNodeExpanded: (nodeId: string) => void;
   recalculateLayout: () => void;
 }
@@ -132,6 +133,81 @@ export function createLayoutSlice(
       set({
         metadata: updatedMetadata,
         nodes,
+        edges,
+      });
+
+      get().saveToStorage();
+    },
+
+    updateNodePositions: (updates: { id: string; position: XYPosition }[]) => {
+      const { metadata, parsed } = get();
+      if (!parsed || updates.length === 0) return;
+
+      const contentMap = buildContentMapFromItems(parsed.items);
+
+      let updatedNodeMetadata = { ...metadata.nodeMetadata };
+      for (const { id, position } of updates) {
+        const item = findItem(parsed.items, id);
+        if (item && item.level === 1) {
+          const parentRoot = findParentRoot(parsed.items, id);
+          if (parentRoot) {
+            const rootX = updatedNodeMetadata[parentRoot.id]?.position?.x ?? 0;
+            const newDirection: LayoutDirection = position.x < rootX ? 'left' : 'right';
+            const currentDirection = updatedNodeMetadata[id]?.direction ?? 'right';
+
+            updatedNodeMetadata[id] = {
+              ...updatedNodeMetadata[id],
+              id,
+              position,
+              expanded: updatedNodeMetadata[id]?.expanded ?? true,
+              direction: newDirection,
+            };
+
+            if (newDirection !== currentDirection) {
+              updatedNodeMetadata = relayoutSubtree(
+                id,
+                newDirection,
+                parsed.items,
+                updatedNodeMetadata,
+              );
+            }
+          } else {
+            updatedNodeMetadata[id] = {
+              ...updatedNodeMetadata[id],
+              id,
+              position,
+              expanded: updatedNodeMetadata[id]?.expanded ?? true,
+            };
+          }
+        } else {
+          updatedNodeMetadata[id] = {
+            ...updatedNodeMetadata[id],
+            id,
+            position,
+            expanded: updatedNodeMetadata[id]?.expanded ?? true,
+          };
+        }
+      }
+
+      updatedNodeMetadata = resolveOverlaps(updatedNodeMetadata, contentMap);
+
+      const updatedMetadata: MindMapMetadata = {
+        ...metadata,
+        nodeMetadata: updatedNodeMetadata,
+        lastModified: Date.now(),
+      };
+
+      const { nodes, edges } = treeToFlow(parsed, updatedMetadata);
+
+      // 移動対象ノードの選択状態を維持
+      const movedIds = new Set(updates.map(u => u.id));
+      const nodesWithSelection = nodes.map(n =>
+        movedIds.has(n.id) ? { ...n, selected: true } : n
+      );
+
+      set({
+        metadata: updatedMetadata,
+        nodes: nodesWithSelection,
         edges,
       });
 
