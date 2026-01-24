@@ -11,8 +11,12 @@ export const MindMapNode = memo(function MindMapNode({
   data,
   selected,
 }: NodeProps<MindMapNodeType>) {
-  const { label, level, hasChildren, expanded } = data
+  const { label, level, hasChildren, expanded, direction = 'right' } = data
   const { nodeStyle, fontStyle } = useCanvasSettings()
+
+  // 方向に応じてハンドル位置を決定
+  const targetPosition = direction === 'right' ? Position.Left : Position.Right
+  const sourcePosition = direction === 'right' ? Position.Right : Position.Left
 
   const {
     setEditingNodeId,
@@ -55,12 +59,20 @@ export const MindMapNode = memo(function MindMapNode({
     [id, hasChildren, toggleNodeExpanded],
   )
 
+  const directionClass = direction === 'left' ? 'direction-left' : ''
+
   return (
     <div
-      className={`mindmap-node level-${level} ${selected ? 'selected' : ''} ${isEditing ? 'editing' : ''} style-${nodeStyle} font-${fontStyle}`}
+      className={`mindmap-node level-${level} ${selected ? 'selected' : ''} ${isEditing ? 'editing' : ''} style-${nodeStyle} font-${fontStyle} ${directionClass}`}
       onDoubleClick={handleDoubleClick}
     >
-      {level > 0 && <Handle type="target" position={Position.Left} />}
+      {level > 0 && (
+        <Handle
+          type="target"
+          position={targetPosition}
+          id={targetPosition === Position.Left ? 'left' : 'right'}
+        />
+      )}
 
       <div className="node-content">
         {hasChildren && (
@@ -97,7 +109,18 @@ export const MindMapNode = memo(function MindMapNode({
         </button>
       </div>
 
-      <Handle type="source" position={Position.Right} />
+      {level === 0 ? (
+        <>
+          <Handle type="source" position={Position.Right} id="right" />
+          <Handle type="source" position={Position.Left} id="left" />
+        </>
+      ) : (
+        <Handle
+          type="source"
+          position={sourcePosition}
+          id={sourcePosition === Position.Right ? 'right' : 'left'}
+        />
+      )}
     </div>
   )
 })

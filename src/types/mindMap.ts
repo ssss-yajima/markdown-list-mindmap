@@ -1,12 +1,18 @@
 import type { Node, Edge, XYPosition } from '@xyflow/react'
 
 /**
+ * レイアウト方向（左または右）
+ */
+export type LayoutDirection = 'left' | 'right'
+
+/**
  * ノードのメタデータ（位置情報など）
  */
 export interface NodeMetadata {
   id: string
   position: XYPosition
   expanded: boolean
+  direction?: LayoutDirection // レベル1ノード専用
 }
 
 /**
@@ -31,6 +37,7 @@ export interface MindMapNodeData extends Record<string, unknown> {
   level: number
   hasChildren: boolean
   expanded: boolean
+  direction?: LayoutDirection // 表示用
 }
 
 /**
