@@ -1,5 +1,5 @@
 import type { ListItem } from '../types/markdown'
-import type { NodeMetadata } from '../types/mindMap'
+import type { NodeMetadata, LayoutDirection } from '../types/mindMap'
 
 interface LayoutConfig {
   nodeWidth: number
@@ -104,10 +104,29 @@ function createBox(
   }
 }
 
+/**
+ * X座標を計算（方向対応）
+ */
+function calculateX(
+  depth: number,
+  direction: LayoutDirection,
+  config: LayoutConfig,
+): number {
+  if (depth === 0) {
+    return 0
+  }
+  if (direction === 'right') {
+    return depth * (config.nodeWidth + config.horizontalGap)
+  }
+  // left: 負の方向に展開
+  return -depth * (config.nodeWidth + config.horizontalGap)
+}
+
 export function calculateLayout(
   items: ListItem[],
   existingMetadata: Record<string, NodeMetadata>,
   config: LayoutConfig = DEFAULT_CONFIG,
+  directionOverrides?: Record<string, LayoutDirection>,
 ): Record<string, NodeMetadata> {
   const result: Record<string, NodeMetadata> = {}
   const placedBoxes: { id: string; box: BoundingBox }[] = []
@@ -164,20 +183,25 @@ export function calculateLayout(
   }
 
   /**
-   * サブツリーをレイアウト
+   * サブツリーをレイアウト（方向対応）
    */
   function layoutSubtree(
     item: ListItem,
     depth: number,
     startY: number,
+    direction: LayoutDirection,
   ): number {
-    const x = depth * (config.nodeWidth + config.horizontalGap)
+    const x = calculateX(depth, direction, config)
     const nodeHeight = estimateNodeHeight(item.text, config)
 
     // 既存の位置があれば使用（ユーザーがドラッグした位置を保持）
     const existing = existingMetadata[item.id]
     if (existing?.position) {
-      result[item.id] = existing
+      // directionを保持
+      result[item.id] = {
+        ...existing,
+        direction: depth === 1 ? (existing.direction ?? direction) : undefined,
+      }
       placedBoxes.push({
         id: item.id,
         box: createBox(
@@ -188,11 +212,23 @@ export function calculateLayout(
         ),
       })
 
+      // 子ノードの方向は親（レベル1）の方向を継承
+      const childDirection = depth >= 1 ? direction : 'right'
       let childY = startY
-      item.children.forEach((child) => {
-        const childHeight = layoutSubtree(child, depth + 1, childY)
+      for (const child of item.children) {
+        // レベル1ノードの場合はdirectionOverridesまたは既存のdirectionを取得
+        const existingChildDirection =
+          depth === 0
+            ? (directionOverrides?.[child.id] ?? existingMetadata[child.id]?.direction)
+            : undefined
+        const childHeight = layoutSubtree(
+          child,
+          depth + 1,
+          childY,
+          existingChildDirection ?? childDirection,
+        )
         childY += childHeight + config.verticalGap
-      })
+      }
       return getSubtreeHeight(item)
     }
 
@@ -202,6 +238,7 @@ export function calculateLayout(
         id: item.id,
         position: { x, y: finalY },
         expanded: true,
+        direction: depth === 1 ? direction : undefined,
       }
       placedBoxes.push({
         id: item.id,
@@ -214,11 +251,23 @@ export function calculateLayout(
     let childY = startY
     const childPositions: number[] = []
 
-    item.children.forEach((child) => {
+    // 子ノードの方向は親（レベル1）の方向を継承
+    const childDirection = depth >= 1 ? direction : 'right'
+    for (const child of item.children) {
       childPositions.push(childY)
-      const childHeight = layoutSubtree(child, depth + 1, childY)
+      // レベル1ノードの場合はdirectionOverridesまたは既存のdirectionを取得
+      const existingChildDirection =
+        depth === 0
+          ? (directionOverrides?.[child.id] ?? existingMetadata[child.id]?.direction)
+          : undefined
+      const childHeight = layoutSubtree(
+        child,
+        depth + 1,
+        childY,
+        existingChildDirection ?? childDirection,
+      )
       childY += childHeight + config.verticalGap
-    })
+    }
 
     // 親を子の中央に配置
     const firstChildMeta = result[item.children[0].id]
@@ -235,6 +284,7 @@ export function calculateLayout(
       id: item.id,
       position: { x, y: finalY },
       expanded: true,
+      direction: depth === 1 ? direction : undefined,
     }
     placedBoxes.push({
       id: item.id,
@@ -246,10 +296,10 @@ export function calculateLayout(
 
   let currentY = 0
 
-  items.forEach((item) => {
-    const height = layoutSubtree(item, 0, currentY)
+  for (const item of items) {
+    const height = layoutSubtree(item, 0, currentY, 'right')
     currentY += height + config.verticalGap * 2
-  })
+  }
 
   // 最終的な衝突解消パスを実行
   const contentMap = buildContentMapFromItems(items)
@@ -260,6 +310,7 @@ export function calculateLayout(
 /**
  * 重なりを検出して解消するレイアウト調整
  * ユーザーがノードをドラッグした後に呼び出される
+ * 左側ノード（x < 0）と右側ノード（x >= 0）を分離して衝突解消
  */
 export function resolveOverlaps(
   metadata: Record<string, NodeMetadata>,
@@ -276,69 +327,134 @@ export function resolveOverlaps(
     heightMap[id] = estimateNodeHeight(text, config)
   }
 
-  // 全ペアで重なりをチェック
-  let hasChanges = true
-  let iterations = 0
-  const maxIterations = 50
+  // 左側と右側に分離
+  const leftEntries = entries.filter(
+    ([, meta]) => meta.position && meta.position.x < 0,
+  )
+  const rightEntries = entries.filter(
+    ([, meta]) => meta.position && meta.position.x >= 0,
+  )
 
-  // 同一深度（X座標が近い）のノード間のみ衝突をチェック
-  // 階層間隔（nodeWidth + horizontalGap）に合わせて設定
-  const xTolerance = config.nodeWidth + config.horizontalGap
+  // 各サイドで衝突解消を実行
+  const resolveOverlapsForSide = (
+    sideEntries: [string, NodeMetadata][],
+  ): void => {
+    let hasChanges = true
+    let iterations = 0
+    const maxIterations = 50
 
-  while (hasChanges && iterations < maxIterations) {
-    hasChanges = false
+    // 同一深度（X座標が近い）のノード間のみ衝突をチェック
+    // 階層間隔（nodeWidth + horizontalGap）に合わせて設定
+    const xTolerance = config.nodeWidth + config.horizontalGap
 
-    for (let i = 0; i < entries.length; i++) {
-      for (let j = i + 1; j < entries.length; j++) {
-        const [idA, metaA] = entries[i]
-        const [idB, metaB] = entries[j]
+    while (hasChanges && iterations < maxIterations) {
+      hasChanges = false
 
-        if (!metaA.position || !metaB.position) continue
+      for (let i = 0; i < sideEntries.length; i++) {
+        for (let j = i + 1; j < sideEntries.length; j++) {
+          const [idA, metaA] = sideEntries[i]
+          const [idB, metaB] = sideEntries[j]
 
-        // 同一階層のノードのみ衝突チェック
-        const sameDepth =
-          Math.abs(metaA.position.x - metaB.position.x) < xTolerance
-        if (!sameDepth) continue
+          if (!metaA.position || !metaB.position) continue
 
-        const heightA = heightMap[idA]
-        const heightB = heightMap[idB]
-        const boxA = createBox(
-          metaA.position.x,
-          metaA.position.y,
-          config,
-          heightA,
-        )
-        const boxB = createBox(
-          metaB.position.x,
-          metaB.position.y,
-          config,
-          heightB,
-        )
+          // 同一階層のノードのみ衝突チェック
+          const sameDepth =
+            Math.abs(metaA.position.x - metaB.position.x) < xTolerance
+          if (!sameDepth) continue
 
-        if (boxesOverlap(boxA, boxB, config.minVerticalGap)) {
-          // 重なりを解消 - 下にあるノードを下に移動
-          if (boxA.y <= boxB.y) {
-            const newY = boxA.y + boxA.height + config.verticalGap
-            result[idB] = {
-              ...metaB,
-              position: { ...metaB.position, y: newY },
+          const heightA = heightMap[idA]
+          const heightB = heightMap[idB]
+          const boxA = createBox(
+            metaA.position.x,
+            metaA.position.y,
+            config,
+            heightA,
+          )
+          const boxB = createBox(
+            metaB.position.x,
+            metaB.position.y,
+            config,
+            heightB,
+          )
+
+          if (boxesOverlap(boxA, boxB, config.minVerticalGap)) {
+            // 重なりを解消 - 下にあるノードを下に移動
+            if (boxA.y <= boxB.y) {
+              const newY = boxA.y + boxA.height + config.verticalGap
+              result[idB] = {
+                ...metaB,
+                position: { ...metaB.position, y: newY },
+              }
+              sideEntries[j] = [idB, result[idB]]
+            } else {
+              const newY = boxB.y + boxB.height + config.verticalGap
+              result[idA] = {
+                ...metaA,
+                position: { ...metaA.position, y: newY },
+              }
+              sideEntries[i] = [idA, result[idA]]
             }
-            entries[j] = [idB, result[idB]]
-          } else {
-            const newY = boxB.y + boxB.height + config.verticalGap
-            result[idA] = {
-              ...metaA,
-              position: { ...metaA.position, y: newY },
-            }
-            entries[i] = [idA, result[idA]]
+            hasChanges = true
           }
-          hasChanges = true
         }
       }
-    }
 
-    iterations++
+      iterations++
+    }
   }
 
+  resolveOverlapsForSide(leftEntries)
+  resolveOverlapsForSide(rightEntries)
+
   return result
+}
+
+/**
+ * 指定ノードのサブツリーを新しい方向で再レイアウト
+ */
+export function relayoutSubtree(
+  nodeId: string,
+  newDirection: LayoutDirection,
+  items: ListItem[],
+  existingMetadata: Record<string, NodeMetadata>,
+  config: LayoutConfig = DEFAULT_CONFIG,
+): Record<string, NodeMetadata> {
+  const result = { ...existingMetadata }
+
+  /**
+   * ノードとその子孫のIDを収集
+   */
+  function collectSubtreeIds(item: ListItem): string[] {
+    const ids = [item.id]
+    for (const child of item.children) {
+      ids.push(...collectSubtreeIds(child))
+    }
+    return ids
+  }
+
+  /**
+   * itemsからnodeIdを持つListItemを探す
+   */
+  function findItem(list: ListItem[], targetId: string): ListItem | null {
+    for (const item of list) {
+      if (item.id === targetId) return item
+      const found = findItem(item.children, targetId)
+      if (found) return found
+    }
+    return null
+  }
+
+  const targetItem = findItem(items, nodeId)
+  if (!targetItem) return result
+
+  // サブツリーのIDを収集
+  const subtreeIds = collectSubtreeIds(targetItem)
+
+  // サブツリーの全ノードの既存位置をクリア（レベル1ノード含む、位置は再計算）
+  for (const id of subtreeIds) {
+    delete result[id]
+  }
+
+  // directionOverridesで新しい方向を渡して全体を再レイアウト
+  return calculateLayout(items, result, config, { [nodeId]: newDirection })
 }

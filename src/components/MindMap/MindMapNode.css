@@ -212,3 +212,12 @@
 .mindmap-node.selected .add-child-button {
   opacity: 1;
 }
+
+/* Direction-left styles */
+.mindmap-node.direction-left .node-content {
+  flex-direction: row-reverse;
+}
+
+.mindmap-node.direction-left .expand-button {
+  transform: rotate(180deg);
+}
