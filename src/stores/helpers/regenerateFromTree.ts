@@ -1,4 +1,4 @@
-import type { MindMapNode, MindMapEdge, MindMapMetadata } from '../../types/mindMap';
+import type { MindMapNode, MindMapEdge, MindMapMetadata, LayoutDirection } from '../../types/mindMap';
 import type { ParsedMarkdown, ListItem } from '../../types/markdown';
 import { treeToFlow } from '../../utils/treeToFlow';
 import { calculateLayout, resolveOverlaps, buildContentMapFromItems } from '../../utils/layoutEngine';
@@ -26,9 +26,18 @@ export function regenerateFromTree(
   const parsed: ParsedMarkdown = { items, rawText: markdown };
 
   const contentMap = buildContentMapFromItems(items);
+
+  // 既存のdirection情報を保持
+  const directionOverrides: Record<string, LayoutDirection> = {};
+  for (const [id, meta] of Object.entries(metadata.nodeMetadata)) {
+    if (meta.direction) {
+      directionOverrides[id] = meta.direction;
+    }
+  }
+
   const updatedNodeMetadata = preservePositions
-    ? resolveOverlaps(calculateLayout(items, metadata.nodeMetadata), contentMap)
-    : calculateLayout(items, {});
+    ? resolveOverlaps(calculateLayout(items, metadata.nodeMetadata, undefined, directionOverrides), contentMap)
+    : calculateLayout(items, {}, undefined, directionOverrides);
 
   const updatedMetadata: MindMapMetadata = {
     ...metadata,
