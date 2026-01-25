@@ -1,5 +1,5 @@
 import type { MindMapState } from '../mindMapStore';
-import type { MindMapMetadata } from '../../types/mindMap';
+import type { MindMapMetadata, LayoutDirection } from '../../types/mindMap';
 import type { ParsedMarkdown } from '../../types/markdown';
 import { parseAndEnsureIds, syncMarkdownWithTree } from '../../utils/markdownParser';
 import { treeToFlow } from '../../utils/treeToFlow';
@@ -44,9 +44,22 @@ export function createMarkdownSlice(
 
       // 新規入力かどうかを判定して、初期レイアウトでは空のメタデータを渡す
       const isNewInput = !hasIds && Object.keys(metadata.nodeMetadata).length === 0;
+
+      // 既存のdirection情報を保持
+      const directionOverrides: Record<string, LayoutDirection> = {};
+      if (!isNewInput) {
+        for (const [id, meta] of Object.entries(metadata.nodeMetadata)) {
+          if (meta.direction) {
+            directionOverrides[id] = meta.direction;
+          }
+        }
+      }
+
       const updatedNodeMetadata = calculateLayout(
         parsed.items,
-        isNewInput ? {} : metadata.nodeMetadata
+        isNewInput ? {} : metadata.nodeMetadata,
+        undefined,
+        isNewInput ? undefined : directionOverrides
       );
 
       const updatedMetadata: MindMapMetadata = {
