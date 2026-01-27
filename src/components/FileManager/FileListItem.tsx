@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { memo, useState, useRef, useEffect, useCallback } from 'react'
 import type { FileInfo } from '../../types/file'
 
 interface FileListItemProps {
@@ -12,7 +12,7 @@ interface FileListItemProps {
   onToggleSelect: (fileId: string) => void
 }
 
-export function FileListItem({
+export const FileListItem = memo(function FileListItem({
   file,
   isActive,
   canDelete,
@@ -121,4 +121,4 @@ export function FileListItem({
       )}
     </div>
   )
-}
+})

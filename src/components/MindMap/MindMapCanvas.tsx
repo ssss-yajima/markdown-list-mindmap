@@ -25,6 +25,10 @@ const nodeTypes: NodeTypes = {
   mindmap: MindMapNode,
 }
 
+const defaultEdgeOptions = {
+  type: 'bezier' as const,
+}
+
 export function MindMapCanvas() {
   const {
     nodes,
@@ -149,9 +153,7 @@ export function MindMapCanvas() {
           fitView
           minZoom={0.1}
           maxZoom={2}
-          defaultEdgeOptions={{
-            type: 'bezier',
-          }}
+          defaultEdgeOptions={defaultEdgeOptions}
           selectionOnDrag={true}
           selectionMode={SelectionMode.Partial}
           panOnDrag={[2]}

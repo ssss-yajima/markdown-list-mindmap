@@ -147,11 +147,8 @@ export function useMarkdownEditorKeyboard({
           const newNextLine = `${lineInfo.indent}${nextMarker} ${remainingContent}`
 
           const finalValue =
-            value.slice(0, lineInfo.lineStart) +
-            newCurrentLine +
-            '\n' +
-            newNextLine +
-            value.slice(lineInfo.lineEnd)
+            `${value.slice(0, lineInfo.lineStart) +
+            newCurrentLine}\n${newNextLine}${value.slice(lineInfo.lineEnd)}`
 
           onChange(finalValue)
 
@@ -179,7 +176,7 @@ export function useMarkdownEditorKeyboard({
         if (!lineInfo.isListItem) {
           // 箇条書きでない場合は2スペースを挿入
           const newValue =
-            value.slice(0, selectionStart) + '  ' + value.slice(selectionEnd)
+            `${value.slice(0, selectionStart)}  ${value.slice(selectionEnd)}`
           onChange(newValue)
 
           requestAnimationFrame(() => {
@@ -209,7 +206,7 @@ export function useMarkdownEditorKeyboard({
           }
         } else {
           // Tab: インデントを追加（+2スペース）
-          const newIndent = lineInfo.indent + '  '
+          const newIndent = `${lineInfo.indent}  `
           const newLine = `${newIndent}${lineInfo.marker} ${lineInfo.content}`
           const newValue =
             value.slice(0, lineInfo.lineStart) +

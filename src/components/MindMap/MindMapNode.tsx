@@ -59,6 +59,17 @@ export const MindMapNode = memo(function MindMapNode({
     [id, hasChildren, toggleNodeExpanded],
   )
 
+  const handleEditTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setEditText(e.target.value)
+    },
+    [setEditText],
+  )
+
+  const handleInputClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+  }, [])
+
   const directionClass = direction === 'left' ? 'direction-left' : ''
 
   return (
@@ -91,10 +102,10 @@ export const MindMapNode = memo(function MindMapNode({
             type="text"
             className="node-input"
             value={editText}
-            onChange={(e) => setEditText(e.target.value)}
+            onChange={handleEditTextChange}
             onBlur={handleInputBlur}
             onKeyDown={handleInputKeyDown}
-            onClick={(e) => e.stopPropagation()}
+            onClick={handleInputClick}
           />
         ) : (
           <span className="node-label">{label}</span>

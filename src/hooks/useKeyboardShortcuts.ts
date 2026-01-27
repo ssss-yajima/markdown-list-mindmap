@@ -12,25 +12,17 @@ import { useEffect, useCallback } from 'react'
 import { useMindMapStore } from '../stores/mindMapStore'
 
 export function useKeyboardShortcuts() {
-  const {
-    selectedNodeId,
-    selectedNodeIds,
-    editingNodeId,
-    setSelectedNodeId,
-    setEditingNodeId,
-    addChildNode,
-    addSiblingNode,
-    addSiblingNodeBefore,
-    deleteNode,
-    deleteNodes,
-  } = useMindMapStore()
+  // 状態のみ selector で取得（再レンダリング最適化）
+  const selectedNodeId = useMindMapStore((s) => s.selectedNodeId)
+  const selectedNodeIds = useMindMapStore((s) => s.selectedNodeIds)
+  const editingNodeId = useMindMapStore((s) => s.editingNodeId)
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       // 編集中は特定のキーのみ処理
       if (editingNodeId) {
         if (e.key === 'Escape') {
-          setEditingNodeId(null)
+          useMindMapStore.getState().setEditingNodeId(null)
         }
         return
       }
@@ -44,6 +36,9 @@ export function useKeyboardShortcuts() {
         return
       }
 
+      // アクションは getState() で取得（依存配列の最適化）
+      const store = useMindMapStore.getState()
+
       // 複数選択時の処理
       if (selectedNodeIds.length > 1) {
         switch (e.key) {
@@ -51,12 +46,12 @@ export function useKeyboardShortcuts() {
           case 'Delete':
             if (e.metaKey || e.ctrlKey) {
               e.preventDefault()
-              deleteNodes(selectedNodeIds)
+              store.deleteNodes(selectedNodeIds)
             }
             break
           case 'Escape':
             e.preventDefault()
-            setSelectedNodeId(null)
+            store.setSelectedNodeId(null)
             break
           default:
             break
@@ -70,15 +65,15 @@ export function useKeyboardShortcuts() {
       switch (e.key) {
         case 'Tab':
           e.preventDefault()
-          addChildNode(selectedNodeId)
+          store.addChildNode(selectedNodeId)
           break
 
         case 'Enter':
           e.preventDefault()
           if (e.shiftKey) {
-            addSiblingNodeBefore(selectedNodeId)
+            store.addSiblingNodeBefore(selectedNodeId)
           } else {
-            addSiblingNode(selectedNodeId)
+            store.addSiblingNode(selectedNodeId)
           }
           break
 
@@ -86,36 +81,25 @@ export function useKeyboardShortcuts() {
         case 'Delete':
           if (e.metaKey || e.ctrlKey) {
             e.preventDefault()
-            deleteNode(selectedNodeId)
+            store.deleteNode(selectedNodeId)
           }
           break
 
         case 'F2':
           e.preventDefault()
-          setEditingNodeId(selectedNodeId)
+          store.setEditingNodeId(selectedNodeId)
           break
 
         case 'Escape':
           e.preventDefault()
-          setSelectedNodeId(null)
+          store.setSelectedNodeId(null)
           break
 
         default:
           break
       }
     },
-    [
-      selectedNodeId,
-      selectedNodeIds,
-      editingNodeId,
-      setSelectedNodeId,
-      setEditingNodeId,
-      addChildNode,
-      addSiblingNode,
-      addSiblingNodeBefore,
-      deleteNode,
-      deleteNodes,
-    ],
+    [selectedNodeId, selectedNodeIds, editingNodeId],
   )
 
   useEffect(() => {

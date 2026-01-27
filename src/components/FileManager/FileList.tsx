@@ -19,19 +19,16 @@ export function FileList() {
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
-  // 初期化
+  // 初期化 + アクティブファイルの読み込み
   useEffect(() => {
     if (!isLoaded) {
       initialize()
+      return
     }
-  }, [isLoaded, initialize])
-
-  // アクティブファイルの読み込み
-  useEffect(() => {
-    if (isLoaded && index.activeFileId && index.activeFileId !== activeFileId) {
+    if (index.activeFileId && index.activeFileId !== activeFileId) {
       loadFileData(index.activeFileId)
     }
-  }, [isLoaded, index.activeFileId, activeFileId, loadFileData])
+  }, [isLoaded, initialize, index.activeFileId, activeFileId, loadFileData])
 
   const handleSelect = useCallback(
     (fileId: string) => {

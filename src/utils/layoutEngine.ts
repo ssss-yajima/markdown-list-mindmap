@@ -17,6 +17,8 @@ const DEFAULT_CONFIG: LayoutConfig = {
   minVerticalGap: 4,
 }
 
+const CJK_FULLWIDTH_REGEX = /[\u3000-\u9FFF\uFF00-\uFFEF]/
+
 /**
  * テキスト長に基づいてノード高さを推定
  * 日本語と英数字で文字幅を区別して計算
@@ -34,7 +36,7 @@ function estimateNodeHeight(text: string, config: LayoutConfig): number {
   let totalWidth = 0
   for (const char of text) {
     // 日本語・全角文字の判定（CJK統合漢字、ひらがな、カタカナ、全角記号など）
-    if (/[\u3000-\u9FFF\uFF00-\uFFEF]/.test(char)) {
+    if (CJK_FULLWIDTH_REGEX.test(char)) {
       totalWidth += 14
     } else {
       totalWidth += 8

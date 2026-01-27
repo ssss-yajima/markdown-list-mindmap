@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { useConfigStore, type NodeStyle, type FontStyle } from '../stores/configStore';
 
 interface CanvasSettings {
@@ -14,9 +14,10 @@ interface CanvasSettingsProviderProps {
 
 export function CanvasSettingsProvider({ children }: CanvasSettingsProviderProps) {
   const { nodeStyle, fontStyle } = useConfigStore();
+  const value = useMemo(() => ({ nodeStyle, fontStyle }), [nodeStyle, fontStyle]);
 
   return (
-    <CanvasSettingsContext.Provider value={{ nodeStyle, fontStyle }}>
+    <CanvasSettingsContext.Provider value={value}>
       {children}
     </CanvasSettingsContext.Provider>
   );

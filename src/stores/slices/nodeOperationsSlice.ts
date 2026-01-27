@@ -1,5 +1,7 @@
 import type { MindMapState } from '../mindMapStore';
-import { regenerateFromTree } from '../helpers/regenerateFromTree';
+import type { ListItem } from '../../types/markdown';
+import type { MindMapMetadata } from '../../types/mindMap';
+import { regenerateFromTree, type RegenerateResult } from '../helpers/regenerateFromTree';
 import {
   addChildNode as treeAddChild,
   addSiblingNode as treeAddSibling,
@@ -22,6 +24,32 @@ export interface NodeOperationsSlice {
   deleteNode: (nodeId: string) => void;
   deleteNodes: (nodeIds: string[]) => void;
   updateNodeText: (nodeId: string, text: string) => void;
+}
+
+/**
+ * ツリー操作 → 再生成 → set → save の共通パターン
+ */
+function applyTreeOperation(
+  set: SetState,
+  get: GetState,
+  operation: (items: ListItem[], metadata: MindMapMetadata) => {
+    result: RegenerateResult;
+    stateOverrides: Partial<MindMapState>;
+  },
+  errorMessage: string,
+): boolean {
+  const { parsed, metadata } = get();
+  if (!parsed) return false;
+
+  try {
+    const { result, stateOverrides } = operation(parsed.items, metadata);
+    set({ ...result, ...stateOverrides });
+    get().saveToStorage();
+    return true;
+  } catch {
+    console.error(errorMessage);
+    return false;
+  }
 }
 
 export function createNodeOperationsSlice(
@@ -54,94 +82,58 @@ export function createNodeOperationsSlice(
     },
 
     addChildNode: (parentId: string, text = '新しいノード') => {
-      const { parsed, metadata } = get();
-      if (!parsed) return null;
-
-      try {
-        const { items: newItems, newNodeId } = treeAddChild(
-          parsed.items,
-          parentId,
-          text
-        );
-
-        const result = regenerateFromTree(newItems, metadata, false);
-
-        set({
-          ...result,
-          selectedNodeId: newNodeId,
-          editingNodeId: newNodeId,
-          centerTargetNodeId: newNodeId,
-        });
-
-        get().saveToStorage();
-        return newNodeId;
-      } catch {
-        console.error('Failed to add child node');
-        return null;
-      }
+      let resultNodeId: string | null = null;
+      const success = applyTreeOperation(set, get, (items, metadata) => {
+        const { items: newItems, newNodeId } = treeAddChild(items, parentId, text);
+        resultNodeId = newNodeId;
+        return {
+          result: regenerateFromTree(newItems, metadata, false),
+          stateOverrides: {
+            selectedNodeId: newNodeId,
+            editingNodeId: newNodeId,
+            centerTargetNodeId: newNodeId,
+          },
+        };
+      }, 'Failed to add child node');
+      return success ? resultNodeId : null;
     },
 
     addSiblingNode: (siblingId: string, text = '新しいノード') => {
-      const { parsed, metadata } = get();
-      if (!parsed) return null;
-
-      try {
-        const { items: newItems, newNodeId } = treeAddSibling(
-          parsed.items,
-          siblingId,
-          text
-        );
-
-        const result = regenerateFromTree(newItems, metadata, false);
-
-        set({
-          ...result,
-          selectedNodeId: newNodeId,
-          editingNodeId: newNodeId,
-          centerTargetNodeId: newNodeId,
-        });
-
-        get().saveToStorage();
-        return newNodeId;
-      } catch {
-        console.error('Failed to add sibling node');
-        return null;
-      }
+      let resultNodeId: string | null = null;
+      const success = applyTreeOperation(set, get, (items, metadata) => {
+        const { items: newItems, newNodeId } = treeAddSibling(items, siblingId, text);
+        resultNodeId = newNodeId;
+        return {
+          result: regenerateFromTree(newItems, metadata, false),
+          stateOverrides: {
+            selectedNodeId: newNodeId,
+            editingNodeId: newNodeId,
+            centerTargetNodeId: newNodeId,
+          },
+        };
+      }, 'Failed to add sibling node');
+      return success ? resultNodeId : null;
     },
 
     addSiblingNodeBefore: (siblingId: string, text = '新しいノード') => {
-      const { parsed, metadata } = get();
-      if (!parsed) return null;
-
-      try {
-        const { items: newItems, newNodeId } = treeAddSiblingBefore(
-          parsed.items,
-          siblingId,
-          text
-        );
-
-        const result = regenerateFromTree(newItems, metadata, false);
-
-        set({
-          ...result,
-          selectedNodeId: newNodeId,
-          editingNodeId: newNodeId,
-          centerTargetNodeId: newNodeId,
-        });
-
-        get().saveToStorage();
-        return newNodeId;
-      } catch {
-        console.error('Failed to add sibling node before');
-        return null;
-      }
+      let resultNodeId: string | null = null;
+      const success = applyTreeOperation(set, get, (items, metadata) => {
+        const { items: newItems, newNodeId } = treeAddSiblingBefore(items, siblingId, text);
+        resultNodeId = newNodeId;
+        return {
+          result: regenerateFromTree(newItems, metadata, false),
+          stateOverrides: {
+            selectedNodeId: newNodeId,
+            editingNodeId: newNodeId,
+            centerTargetNodeId: newNodeId,
+          },
+        };
+      }, 'Failed to add sibling node before');
+      return success ? resultNodeId : null;
     },
 
     deleteNode: (nodeId: string) => {
-      const { parsed, metadata, nodes } = get();
-      if (!parsed) return;
-
-      // 削除後に選択するノードを決定（前の兄弟 or 親）
+      const { nodes } = get();
       const currentIndex = nodes.findIndex((n) => n.id === nodeId);
       let nextSelectedId: string | null = null;
 
@@ -151,60 +143,39 @@ export function createNodeOperationsSlice(
         nextSelectedId = nodes[1].id;
       }
 
-      try {
-        const newItems = treeDelete(parsed.items, nodeId);
-        const result = regenerateFromTree(newItems, metadata, true);
-
-        set({
-          ...result,
-          selectedNodeId: nextSelectedId,
-          editingNodeId: null,
-        });
-
-        get().saveToStorage();
-      } catch {
-        console.error('Failed to delete node');
-      }
+      applyTreeOperation(set, get, (items, metadata) => {
+        const newItems = treeDelete(items, nodeId);
+        return {
+          result: regenerateFromTree(newItems, metadata, true),
+          stateOverrides: { selectedNodeId: nextSelectedId, editingNodeId: null },
+        };
+      }, 'Failed to delete node');
     },
 
     deleteNodes: (nodeIds: string[]) => {
-      const { parsed, metadata } = get();
-      if (!parsed || nodeIds.length === 0) return;
+      if (nodeIds.length === 0) return;
 
-      try {
-        const newItems = treeDeleteNodes(parsed.items, nodeIds);
-        const result = regenerateFromTree(newItems, metadata, true);
-
-        set({
-          ...result,
-          selectedNodeId: null,
-          selectedNodeIds: [],
-          editingNodeId: null,
-        });
-
-        get().saveToStorage();
-      } catch {
-        console.error('Failed to delete nodes');
-      }
+      applyTreeOperation(set, get, (items, metadata) => {
+        const newItems = treeDeleteNodes(items, nodeIds);
+        return {
+          result: regenerateFromTree(newItems, metadata, true),
+          stateOverrides: {
+            selectedNodeId: null,
+            selectedNodeIds: [],
+            editingNodeId: null,
+          },
+        };
+      }, 'Failed to delete nodes');
     },
 
     updateNodeText: (nodeId: string, text: string) => {
-      const { parsed, metadata } = get();
-      if (!parsed) return;
-
-      try {
-        const newItems = treeUpdateText(parsed.items, nodeId, text);
-        const result = regenerateFromTree(newItems, metadata, true);
-
-        set({
-          ...result,
-          editingNodeId: null,
-        });
-
-        get().saveToStorage();
-      } catch {
-        console.error('Failed to update node text');
-      }
+      applyTreeOperation(set, get, (items, metadata) => {
+        const newItems = treeUpdateText(items, nodeId, text);
+        return {
+          result: regenerateFromTree(newItems, metadata, true),
+          stateOverrides: { editingNodeId: null },
+        };
+      }, 'Failed to update node text');
     },
   };
 }
