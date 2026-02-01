@@ -1,6 +1,10 @@
 import { create } from 'zustand'
 import type { XYPosition } from '@xyflow/react'
-import type { MindMapNode, MindMapEdge, MindMapMetadata } from '../types/mindMap'
+import type {
+  MindMapNode,
+  MindMapEdge,
+  MindMapMetadata,
+} from '../types/mindMap'
 import type { ParsedMarkdown } from '../types/markdown'
 import {
   createNodeOperationsSlice,
@@ -17,8 +21,8 @@ import {
 
 // 状態の型定義
 interface MindMapStateBase {
-  markdown: string           // 内部用（IDコメントあり）
-  displayMarkdown: string    // 表示用（IDコメントなし）
+  markdown: string // 内部用（IDコメントあり）
+  displayMarkdown: string // 表示用（IDコメントなし）
   metadata: MindMapMetadata
   parsed: ParsedMarkdown | null
   nodes: MindMapNode[]
@@ -30,12 +34,12 @@ interface MindMapStateBase {
 }
 
 // 完全なストア型（状態 + すべてのアクション）
-export type MindMapState = MindMapStateBase
-  & NodeOperationsSlice
-  & LayoutSlice
-  & FileSlice
-  & MarkdownSlice
-  & ViewportSlice
+export type MindMapState = MindMapStateBase &
+  NodeOperationsSlice &
+  LayoutSlice &
+  FileSlice &
+  MarkdownSlice &
+  ViewportSlice
 
 const INITIAL_METADATA: MindMapMetadata = {
   version: 1,
@@ -77,5 +81,9 @@ export const useMindMapStore = create<MindMapState>((set, get) => ({
 }))
 
 // 型エクスポート（外部使用向け）
-export type { MindMapMetadata, MindMapNode, MindMapEdge } from '../types/mindMap'
+export type {
+  MindMapMetadata,
+  MindMapNode,
+  MindMapEdge,
+} from '../types/mindMap'
 export type { XYPosition }

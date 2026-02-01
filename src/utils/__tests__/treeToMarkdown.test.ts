@@ -65,14 +65,16 @@ describe('treeToMarkdown', () => {
   })
 
   it('カスタムマーカーを使用する', () => {
-    const items: ListItem[] = [{
-      id: 'a1',
-      text: 'Item',
-      level: 0,
-      lineNumber: 1,
-      listType: 'unordered',
-      children: [],
-    }]
+    const items: ListItem[] = [
+      {
+        id: 'a1',
+        text: 'Item',
+        level: 0,
+        lineNumber: 1,
+        listType: 'unordered',
+        children: [],
+      },
+    ]
     const md = treeToMarkdown(items, { embedIds: false, marker: '*' })
     expect(md).toBe('* Item')
   })
@@ -84,7 +86,8 @@ describe('treeToMarkdown', () => {
 
 describe('treeToMarkdown ラウンドトリップ', () => {
   it('parse → treeToMarkdown → parse が等価', () => {
-    const md = '- Root <!-- id:a1 -->\n  - Child1 <!-- id:b1 -->\n  - Child2 <!-- id:b2 -->'
+    const md =
+      '- Root <!-- id:a1 -->\n  - Child1 <!-- id:b1 -->\n  - Child2 <!-- id:b2 -->'
     const parsed1 = parseMarkdown(md)
     const regenerated = treeToMarkdown(parsed1.items, { embedIds: true })
     const parsed2 = parseMarkdown(regenerated)
@@ -92,9 +95,15 @@ describe('treeToMarkdown ラウンドトリップ', () => {
     expect(parsed2.items).toHaveLength(parsed1.items.length)
     expect(parsed2.items[0].id).toBe(parsed1.items[0].id)
     expect(parsed2.items[0].text).toBe(parsed1.items[0].text)
-    expect(parsed2.items[0].children).toHaveLength(parsed1.items[0].children.length)
-    expect(parsed2.items[0].children[0].id).toBe(parsed1.items[0].children[0].id)
-    expect(parsed2.items[0].children[1].id).toBe(parsed1.items[0].children[1].id)
+    expect(parsed2.items[0].children).toHaveLength(
+      parsed1.items[0].children.length,
+    )
+    expect(parsed2.items[0].children[0].id).toBe(
+      parsed1.items[0].children[0].id,
+    )
+    expect(parsed2.items[0].children[1].id).toBe(
+      parsed1.items[0].children[1].id,
+    )
   })
 })
 

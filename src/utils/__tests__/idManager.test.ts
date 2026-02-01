@@ -85,16 +85,25 @@ describe('ensureId', () => {
 describe('matchNodes', () => {
   it('同じテキスト・親・兄弟位置で完全マッチする', () => {
     const oldItems = [
-      { id: 'a1', text: 'Root', level: 0, children: [
-        { id: 'b1', text: 'Child1', level: 1, children: [] },
-        { id: 'b2', text: 'Child2', level: 1, children: [] },
-      ] },
+      {
+        id: 'a1',
+        text: 'Root',
+        level: 0,
+        children: [
+          { id: 'b1', text: 'Child1', level: 1, children: [] },
+          { id: 'b2', text: 'Child2', level: 1, children: [] },
+        ],
+      },
     ]
     const newItems = [
-      { text: 'Root', level: 0, children: [
-        { text: 'Child1', level: 1, children: [] },
-        { text: 'Child2', level: 1, children: [] },
-      ] },
+      {
+        text: 'Root',
+        level: 0,
+        children: [
+          { text: 'Child1', level: 1, children: [] },
+          { text: 'Child2', level: 1, children: [] },
+        ],
+      },
     ]
 
     const result = matchNodes(oldItems, newItems)
@@ -105,17 +114,26 @@ describe('matchNodes', () => {
 
   it('テキスト+親テキストでマッチする（兄弟位置が異なる場合）', () => {
     const oldItems = [
-      { id: 'a1', text: 'Root', level: 0, children: [
-        { id: 'b1', text: 'Child1', level: 1, children: [] },
-        { id: 'b2', text: 'Child2', level: 1, children: [] },
-      ] },
+      {
+        id: 'a1',
+        text: 'Root',
+        level: 0,
+        children: [
+          { id: 'b1', text: 'Child1', level: 1, children: [] },
+          { id: 'b2', text: 'Child2', level: 1, children: [] },
+        ],
+      },
     ]
     // Child1とChild2の位置が入れ替わった
     const newItems = [
-      { text: 'Root', level: 0, children: [
-        { text: 'Child2', level: 1, children: [] },
-        { text: 'Child1', level: 1, children: [] },
-      ] },
+      {
+        text: 'Root',
+        level: 0,
+        children: [
+          { text: 'Child2', level: 1, children: [] },
+          { text: 'Child1', level: 1, children: [] },
+        ],
+      },
     ]
 
     const result = matchNodes(oldItems, newItems)
@@ -127,16 +145,21 @@ describe('matchNodes', () => {
 
   it('テキスト+レベルでマッチする（親が異なる場合）', () => {
     const oldItems = [
-      { id: 'a1', text: 'Root1', level: 0, children: [
-        { id: 'b1', text: 'Shared', level: 1, children: [] },
-      ] },
+      {
+        id: 'a1',
+        text: 'Root1',
+        level: 0,
+        children: [{ id: 'b1', text: 'Shared', level: 1, children: [] }],
+      },
       { id: 'a2', text: 'Root2', level: 0, children: [] },
     ]
     const newItems = [
       { text: 'Root1', level: 0, children: [] },
-      { text: 'Root2', level: 0, children: [
-        { text: 'Shared', level: 1, children: [] },
-      ] },
+      {
+        text: 'Root2',
+        level: 0,
+        children: [{ text: 'Shared', level: 1, children: [] }],
+      },
     ]
 
     const result = matchNodes(oldItems, newItems)
@@ -147,9 +170,7 @@ describe('matchNodes', () => {
   })
 
   it('マッチしない新規ノードはマップに含まれない', () => {
-    const oldItems = [
-      { id: 'a1', text: 'Root', level: 0, children: [] },
-    ]
+    const oldItems = [{ id: 'a1', text: 'Root', level: 0, children: [] }]
     const newItems = [
       { text: 'Root', level: 0, children: [] },
       { text: 'NewNode', level: 0, children: [] },

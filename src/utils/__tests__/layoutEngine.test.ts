@@ -51,16 +51,34 @@ describe('buildContentMapFromItems', () => {
   })
 
   it('深いネストのノードも含む', () => {
-    const items: ListItem[] = [{
-      id: 'a', text: 'A', level: 0, lineNumber: 1, listType: 'unordered',
-      children: [{
-        id: 'b', text: 'B', level: 1, lineNumber: 2, listType: 'unordered',
-        children: [{
-          id: 'c', text: 'C', level: 2, lineNumber: 3, listType: 'unordered',
-          children: [],
-        }],
-      }],
-    }]
+    const items: ListItem[] = [
+      {
+        id: 'a',
+        text: 'A',
+        level: 0,
+        lineNumber: 1,
+        listType: 'unordered',
+        children: [
+          {
+            id: 'b',
+            text: 'B',
+            level: 1,
+            lineNumber: 2,
+            listType: 'unordered',
+            children: [
+              {
+                id: 'c',
+                text: 'C',
+                level: 2,
+                lineNumber: 3,
+                listType: 'unordered',
+                children: [],
+              },
+            ],
+          },
+        ],
+      },
+    ]
     const map = buildContentMapFromItems(items)
     expect(Object.keys(map)).toHaveLength(3)
     expect(map.c).toBe('C')
@@ -88,10 +106,16 @@ describe('calculateLayout', () => {
   })
 
   it('単一ノードの場合', () => {
-    const items: ListItem[] = [{
-      id: 'single', text: 'Single', level: 0, lineNumber: 1,
-      listType: 'unordered', children: [],
-    }]
+    const items: ListItem[] = [
+      {
+        id: 'single',
+        text: 'Single',
+        level: 0,
+        lineNumber: 1,
+        listType: 'unordered',
+        children: [],
+      },
+    ]
     const result = calculateLayout(items, {})
     expect(result.single).toBeDefined()
     expect(result.single.position.x).toBe(0)

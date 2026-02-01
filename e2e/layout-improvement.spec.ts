@@ -69,10 +69,18 @@ test.describe('Layout Improvement', () => {
     await page.evaluate(() => {
       localStorage.clear()
       // テスト用にautoCenterを無効化
-      localStorage.setItem('mindmap-config', JSON.stringify({
-        state: { backgroundStyle: 'grid', nodeStyle: 'none', fontStyle: 'system', autoCenterEnabled: false },
-        version: 0
-      }))
+      localStorage.setItem(
+        'mindmap-config',
+        JSON.stringify({
+          state: {
+            backgroundStyle: 'grid',
+            nodeStyle: 'none',
+            fontStyle: 'system',
+            autoCenterEnabled: false,
+          },
+          version: 0,
+        }),
+      )
     })
     await page.reload()
   })
@@ -356,10 +364,18 @@ test.describe('日本語長文テキストの高さ計算', () => {
     await page.evaluate(() => {
       localStorage.clear()
       // テスト用にautoCenterを無効化
-      localStorage.setItem('mindmap-config', JSON.stringify({
-        state: { backgroundStyle: 'grid', nodeStyle: 'none', fontStyle: 'system', autoCenterEnabled: false },
-        version: 0
-      }))
+      localStorage.setItem(
+        'mindmap-config',
+        JSON.stringify({
+          state: {
+            backgroundStyle: 'grid',
+            nodeStyle: 'none',
+            fontStyle: 'system',
+            autoCenterEnabled: false,
+          },
+          version: 0,
+        }),
+      )
     })
     await page.reload()
   })
@@ -420,10 +436,18 @@ test.describe('ドラッグ後の衝突解消', () => {
     await page.evaluate(() => {
       localStorage.clear()
       // テスト用にautoCenterを無効化
-      localStorage.setItem('mindmap-config', JSON.stringify({
-        state: { backgroundStyle: 'grid', nodeStyle: 'none', fontStyle: 'system', autoCenterEnabled: false },
-        version: 0
-      }))
+      localStorage.setItem(
+        'mindmap-config',
+        JSON.stringify({
+          state: {
+            backgroundStyle: 'grid',
+            nodeStyle: 'none',
+            fontStyle: 'system',
+            autoCenterEnabled: false,
+          },
+          version: 0,
+        }),
+      )
     })
     await page.reload()
   })

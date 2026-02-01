@@ -6,7 +6,7 @@ import type { MindMapNode } from '../types/mindMap'
 export function getNodeIdFromCursor(
   text: string,
   cursorPos: number,
-  nodes: MindMapNode[]
+  nodes: MindMapNode[],
 ): string | null {
   // カーソル位置から行番号を計算（1-indexed）
   const lineNumber = text.slice(0, cursorPos).split('\n').length

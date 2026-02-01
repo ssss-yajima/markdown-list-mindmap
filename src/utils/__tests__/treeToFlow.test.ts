@@ -46,7 +46,9 @@ function makeParsed(): ParsedMarkdown {
 }
 
 function makeMetadata(
-  overrides: Partial<Record<string, { position: { x: number; y: number }; expanded: boolean }>> = {},
+  overrides: Partial<
+    Record<string, { position: { x: number; y: number }; expanded: boolean }>
+  > = {},
 ): MindMapMetadata {
   return {
     version: 1,
@@ -54,7 +56,11 @@ function makeMetadata(
       root1: { id: 'root1', position: { x: 0, y: 0 }, expanded: true },
       child1: { id: 'child1', position: { x: 100, y: 0 }, expanded: true },
       child2: { id: 'child2', position: { x: 100, y: 50 }, expanded: true },
-      grandchild1: { id: 'grandchild1', position: { x: 200, y: 50 }, expanded: true },
+      grandchild1: {
+        id: 'grandchild1',
+        position: { x: 200, y: 50 },
+        expanded: true,
+      },
       ...overrides,
     },
     viewport: { x: 0, y: 0, zoom: 1 },
@@ -95,14 +101,20 @@ describe('treeToFlow', () => {
 
     expect(edges).toHaveLength(3)
 
-    const rootToChild1 = edges.find((e) => e.source === 'root1' && e.target === 'child1')
+    const rootToChild1 = edges.find(
+      (e) => e.source === 'root1' && e.target === 'child1',
+    )
     expect(rootToChild1).toBeDefined()
     expect(rootToChild1!.id).toBe('edge-root1-child1')
 
-    const rootToChild2 = edges.find((e) => e.source === 'root1' && e.target === 'child2')
+    const rootToChild2 = edges.find(
+      (e) => e.source === 'root1' && e.target === 'child2',
+    )
     expect(rootToChild2).toBeDefined()
 
-    const child2ToGrandchild = edges.find((e) => e.source === 'child2' && e.target === 'grandchild1')
+    const child2ToGrandchild = edges.find(
+      (e) => e.source === 'child2' && e.target === 'grandchild1',
+    )
     expect(child2ToGrandchild).toBeDefined()
   })
 
@@ -119,7 +131,10 @@ describe('treeToFlow', () => {
     const parsed = makeParsed()
     const metadata = makeMetadata({
       child2: { id: 'child2', position: { x: 100, y: 50 }, expanded: false },
-    } as Record<string, { id: string; position: { x: number; y: number }; expanded: boolean }>)
+    } as Record<
+      string,
+      { id: string; position: { x: number; y: number }; expanded: boolean }
+    >)
     const { nodes, edges } = treeToFlow(parsed, metadata)
 
     expect(nodes.find((n) => n.id === 'grandchild1')).toBeUndefined()
@@ -161,6 +176,8 @@ describe('treeToFlow', () => {
     expect(nodes.find((n) => n.id === 'root1')!.data.hasChildren).toBe(true)
     expect(nodes.find((n) => n.id === 'child1')!.data.hasChildren).toBe(false)
     expect(nodes.find((n) => n.id === 'child2')!.data.hasChildren).toBe(true)
-    expect(nodes.find((n) => n.id === 'grandchild1')!.data.hasChildren).toBe(false)
+    expect(nodes.find((n) => n.id === 'grandchild1')!.data.hasChildren).toBe(
+      false,
+    )
   })
 })

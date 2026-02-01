@@ -145,7 +145,9 @@ describe('addChildNode', () => {
 
   it('存在しない親IDでエラーを投げる', () => {
     const tree = makeTree()
-    expect(() => addChildNode(tree, 'nonexistent')).toThrow('Parent node not found')
+    expect(() => addChildNode(tree, 'nonexistent')).toThrow(
+      'Parent node not found',
+    )
   })
 
   it('元のツリーを変更しない', () => {
@@ -169,7 +171,9 @@ describe('addSiblingNode', () => {
 
   it('存在しないIDでエラーを投げる', () => {
     const tree = makeTree()
-    expect(() => addSiblingNode(tree, 'nonexistent')).toThrow('Sibling node not found')
+    expect(() => addSiblingNode(tree, 'nonexistent')).toThrow(
+      'Sibling node not found',
+    )
   })
 
   it('元のツリーを変更しない', () => {
@@ -228,7 +232,9 @@ describe('updateNodeText', () => {
 
   it('存在しないIDでエラーを投げる', () => {
     const tree = makeTree()
-    expect(() => updateNodeText(tree, 'nonexistent', 'text')).toThrow('Node not found')
+    expect(() => updateNodeText(tree, 'nonexistent', 'text')).toThrow(
+      'Node not found',
+    )
   })
 
   it('元のツリーを変更しない', () => {

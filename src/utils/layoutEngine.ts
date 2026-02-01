@@ -221,7 +221,8 @@ export function calculateLayout(
         // レベル1ノードの場合はdirectionOverridesまたは既存のdirectionを取得
         const existingChildDirection =
           depth === 0
-            ? (directionOverrides?.[child.id] ?? existingMetadata[child.id]?.direction)
+            ? (directionOverrides?.[child.id] ??
+              existingMetadata[child.id]?.direction)
             : undefined
         const childHeight = layoutSubtree(
           child,
@@ -260,7 +261,8 @@ export function calculateLayout(
       // レベル1ノードの場合はdirectionOverridesまたは既存のdirectionを取得
       const existingChildDirection =
         depth === 0
-          ? (directionOverrides?.[child.id] ?? existingMetadata[child.id]?.direction)
+          ? (directionOverrides?.[child.id] ??
+            existingMetadata[child.id]?.direction)
           : undefined
       const childHeight = layoutSubtree(
         child,

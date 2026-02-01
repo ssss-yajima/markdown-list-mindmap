@@ -18,11 +18,8 @@ export const MindMapNode = memo(function MindMapNode({
   const targetPosition = direction === 'right' ? Position.Left : Position.Right
   const sourcePosition = direction === 'right' ? Position.Right : Position.Left
 
-  const {
-    setEditingNodeId,
-    addChildNode,
-    toggleNodeExpanded,
-  } = useMindMapStore()
+  const { setEditingNodeId, addChildNode, toggleNodeExpanded } =
+    useMindMapStore()
 
   const {
     isEditing,
@@ -90,7 +87,7 @@ export const MindMapNode = memo(function MindMapNode({
           <button
             className="expand-button"
             onClick={handleExpandToggle}
-            title={expanded ? '折りたたむ' : '展開する'}
+            title={expanded ? 'Collapse' : 'Expand'}
           >
             {expanded ? '▼' : '▶'}
           </button>
@@ -114,7 +111,7 @@ export const MindMapNode = memo(function MindMapNode({
         <button
           className="add-child-button"
           onClick={handleAddChild}
-          title="子ノードを追加 (Tab)"
+          title="Add child node (Tab)"
         >
           +
         </button>

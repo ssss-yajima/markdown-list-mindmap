@@ -10,9 +10,14 @@ interface UseEditorCenterOptions {
   value: string
 }
 
-export function useEditorCenter({ textareaRef, value }: UseEditorCenterOptions) {
+export function useEditorCenter({
+  textareaRef,
+  value,
+}: UseEditorCenterOptions) {
   const nodes = useMindMapStore((state) => state.nodes)
-  const setCenterTargetNodeId = useMindMapStore((state) => state.setCenterTargetNodeId)
+  const setCenterTargetNodeId = useMindMapStore(
+    (state) => state.setCenterTargetNodeId,
+  )
   const autoCenterEnabled = useConfigStore((state) => state.autoCenterEnabled)
 
   const lastValueRef = useRef<string>(value)

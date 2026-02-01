@@ -7,10 +7,18 @@ test.describe('Markdown Mind Map', () => {
     await page.evaluate(() => {
       localStorage.clear()
       // テスト用にautoCenterを無効化
-      localStorage.setItem('mindmap-config', JSON.stringify({
-        state: { backgroundStyle: 'grid', nodeStyle: 'none', fontStyle: 'system', autoCenterEnabled: false },
-        version: 0
-      }))
+      localStorage.setItem(
+        'mindmap-config',
+        JSON.stringify({
+          state: {
+            backgroundStyle: 'grid',
+            nodeStyle: 'none',
+            fontStyle: 'system',
+            autoCenterEnabled: false,
+          },
+          version: 0,
+        }),
+      )
     })
     await page.reload()
   })

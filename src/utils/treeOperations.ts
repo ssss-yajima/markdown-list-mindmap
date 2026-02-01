@@ -86,7 +86,7 @@ export function createNode(
 export function addChildNode(
   items: ListItem[],
   parentId: string,
-  text = '新しいノード',
+  text = 'New Node',
 ): { items: ListItem[]; newNodeId: string } {
   const newItems = cloneTree(items)
   const parent = findNode(newItems, parentId)
@@ -108,7 +108,7 @@ export function addChildNode(
 export function addSiblingNode(
   items: ListItem[],
   siblingId: string,
-  text = '新しいノード',
+  text = 'New Node',
 ): { items: ListItem[]; newNodeId: string } {
   const newItems = cloneTree(items)
   const result = findSiblings(newItems, siblingId)
@@ -133,7 +133,7 @@ export function addSiblingNode(
 export function addSiblingNodeBefore(
   items: ListItem[],
   siblingId: string,
-  text = '新しいノード',
+  text = 'New Node',
 ): { items: ListItem[]; newNodeId: string } {
   const newItems = cloneTree(items)
   const result = findSiblings(newItems, siblingId)

@@ -1,20 +1,22 @@
-import type { MindMapState } from '../mindMapStore';
+import type { MindMapState } from '../mindMapStore'
 
-type SetState = (partial: Partial<MindMapState> | ((state: MindMapState) => Partial<MindMapState>)) => void;
+type SetState = (
+  partial:
+    | Partial<MindMapState>
+    | ((state: MindMapState) => Partial<MindMapState>),
+) => void
 
 export interface ViewportSlice {
-  centerTargetNodeId: string | null;
-  setCenterTargetNodeId: (nodeId: string | null) => void;
+  centerTargetNodeId: string | null
+  setCenterTargetNodeId: (nodeId: string | null) => void
 }
 
-export function createViewportSlice(
-  set: SetState,
-): ViewportSlice {
+export function createViewportSlice(set: SetState): ViewportSlice {
   return {
     centerTargetNodeId: null,
 
     setCenterTargetNodeId: (nodeId: string | null) => {
-      set({ centerTargetNodeId: nodeId });
+      set({ centerTargetNodeId: nodeId })
     },
-  };
+  }
 }

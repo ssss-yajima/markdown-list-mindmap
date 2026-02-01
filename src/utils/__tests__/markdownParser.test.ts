@@ -124,8 +124,22 @@ describe('parseAndEnsureIds', () => {
 describe('syncMarkdownWithTree', () => {
   it('既存ツリーとの同期でIDを保持する', () => {
     const existingItems: ListItem[] = [
-      { id: 'keep1', text: 'Item1', level: 0, lineNumber: 1, listType: 'unordered', children: [] },
-      { id: 'keep2', text: 'Item2', level: 0, lineNumber: 2, listType: 'unordered', children: [] },
+      {
+        id: 'keep1',
+        text: 'Item1',
+        level: 0,
+        lineNumber: 1,
+        listType: 'unordered',
+        children: [],
+      },
+      {
+        id: 'keep2',
+        text: 'Item2',
+        level: 0,
+        lineNumber: 2,
+        listType: 'unordered',
+        children: [],
+      },
     ]
     const newMarkdown = '- Item1\n- Item2'
 
@@ -138,7 +152,14 @@ describe('syncMarkdownWithTree', () => {
 
   it('新規行にはIDを付与する', () => {
     const existingItems: ListItem[] = [
-      { id: 'keep1', text: 'Item1', level: 0, lineNumber: 1, listType: 'unordered', children: [] },
+      {
+        id: 'keep1',
+        text: 'Item1',
+        level: 0,
+        lineNumber: 1,
+        listType: 'unordered',
+        children: [],
+      },
     ]
     const newMarkdown = '- Item1\n- NewItem'
 

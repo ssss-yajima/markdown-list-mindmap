@@ -105,7 +105,16 @@ export function useNodeEditing({
         setEditingNodeId(null)
       }
     },
-    [editText, label, nodeId, updateNodeText, setEditingNodeId, addSiblingNode, addSiblingNodeBefore, addChildNode],
+    [
+      editText,
+      label,
+      nodeId,
+      updateNodeText,
+      setEditingNodeId,
+      addSiblingNode,
+      addSiblingNodeBefore,
+      addChildNode,
+    ],
   )
 
   return {

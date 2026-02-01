@@ -8,8 +8,12 @@ const LAYOUT_SETTLE_DELAY = 50
 
 export function useViewportCenter() {
   const { setCenter, getNodes, getViewport } = useReactFlow()
-  const centerTargetNodeId = useMindMapStore((state) => state.centerTargetNodeId)
-  const setCenterTargetNodeId = useMindMapStore((state) => state.setCenterTargetNodeId)
+  const centerTargetNodeId = useMindMapStore(
+    (state) => state.centerTargetNodeId,
+  )
+  const setCenterTargetNodeId = useMindMapStore(
+    (state) => state.setCenterTargetNodeId,
+  )
   const autoCenterEnabled = useConfigStore((state) => state.autoCenterEnabled)
 
   const lastCenteredNodeIdRef = useRef<string | null>(null)
@@ -50,5 +54,12 @@ export function useViewportCenter() {
     }, LAYOUT_SETTLE_DELAY)
 
     return () => clearTimeout(timeoutId)
-  }, [centerTargetNodeId, autoCenterEnabled, setCenter, getNodes, getViewport, setCenterTargetNodeId])
+  }, [
+    centerTargetNodeId,
+    autoCenterEnabled,
+    setCenter,
+    getNodes,
+    getViewport,
+    setCenterTargetNodeId,
+  ])
 }
