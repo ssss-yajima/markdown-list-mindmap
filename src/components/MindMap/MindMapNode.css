@@ -221,3 +221,35 @@
 .mindmap-node.direction-left .expand-button {
   transform: rotate(180deg);
 }
+
+/* Inline Markdown styles */
+.node-label .md-link {
+  color: var(--color-link, #0066cc);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.node-label .md-link:hover {
+  color: var(--color-link-hover, #0052a3);
+}
+
+.node-label .md-bold {
+  font-weight: 700;
+}
+
+.node-label .md-italic {
+  font-style: italic;
+}
+
+.node-label .md-strikethrough {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.node-label .md-code {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.9em;
+  background: var(--color-bg-code, rgba(0, 0, 0, 0.06));
+  padding: 1px 4px;
+  border-radius: 3px;
+}
