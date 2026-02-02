@@ -1,9 +1,10 @@
-import { memo, useCallback } from 'react'
+import { memo, useCallback, useMemo } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import type { MindMapNode as MindMapNodeType } from '../../types/mindMap'
 import { useMindMapStore } from '../../stores/mindMapStore'
 import { useCanvasSettings } from '../../contexts/CanvasSettingsContext'
 import { useNodeEditing } from '../../hooks/useNodeEditing'
+import { renderInlineMarkdown } from '../../utils/inlineMarkdownRenderer'
 import './MindMapNode.css'
 
 export const MindMapNode = memo(function MindMapNode({
@@ -69,6 +70,8 @@ export const MindMapNode = memo(function MindMapNode({
 
   const directionClass = direction === 'left' ? 'direction-left' : ''
 
+  const renderedLabel = useMemo(() => renderInlineMarkdown(label), [label])
+
   return (
     <div
       className={`mindmap-node level-${level} ${selected ? 'selected' : ''} ${isEditing ? 'editing' : ''} style-${nodeStyle} font-${fontStyle} ${directionClass}`}
@@ -105,7 +108,7 @@ export const MindMapNode = memo(function MindMapNode({
             onClick={handleInputClick}
           />
         ) : (
-          <span className="node-label">{label}</span>
+          <span className="node-label">{renderedLabel}</span>
         )}
 
         <button
