@@ -124,6 +124,37 @@ function calculateX(
   return -depth * (config.nodeWidth + config.horizontalGap)
 }
 
+/**
+ * Find the direction for a new L1 node by inheriting from siblings.
+ * First searches previous siblings, then next siblings.
+ */
+function findSiblingDirection(
+  siblings: ListItem[],
+  currentIndex: number,
+  directionOverrides: Record<string, LayoutDirection> | undefined,
+  existingMetadata: Record<string, NodeMetadata>,
+): LayoutDirection | undefined {
+  // Search previous siblings first
+  for (let j = currentIndex - 1; j >= 0; j--) {
+    const siblingId = siblings[j].id
+    const siblingDir =
+      directionOverrides?.[siblingId] ?? existingMetadata[siblingId]?.direction
+    if (siblingDir) {
+      return siblingDir
+    }
+  }
+  // Search next siblings
+  for (let j = currentIndex + 1; j < siblings.length; j++) {
+    const siblingId = siblings[j].id
+    const siblingDir =
+      directionOverrides?.[siblingId] ?? existingMetadata[siblingId]?.direction
+    if (siblingDir) {
+      return siblingDir
+    }
+  }
+  return undefined
+}
+
 export function calculateLayout(
   items: ListItem[],
   existingMetadata: Record<string, NodeMetadata>,
@@ -217,12 +248,20 @@ export function calculateLayout(
       // 子ノードの方向は親（レベル1）の方向を継承
       const childDirection = depth >= 1 ? direction : 'right'
       let childY = startY
-      for (const child of item.children) {
+      for (let i = 0; i < item.children.length; i++) {
+        const child = item.children[i]
         // レベル1ノードの場合はdirectionOverridesまたは既存のdirectionを取得
+        // 新規L1ノードの場合、兄弟の方向を継承
         const existingChildDirection =
           depth === 0
             ? (directionOverrides?.[child.id] ??
-              existingMetadata[child.id]?.direction)
+                existingMetadata[child.id]?.direction ??
+                findSiblingDirection(
+                  item.children,
+                  i,
+                  directionOverrides,
+                  existingMetadata,
+                ))
             : undefined
         const childHeight = layoutSubtree(
           child,
@@ -256,13 +295,21 @@ export function calculateLayout(
 
     // 子ノードの方向は親（レベル1）の方向を継承
     const childDirection = depth >= 1 ? direction : 'right'
-    for (const child of item.children) {
+    for (let i = 0; i < item.children.length; i++) {
+      const child = item.children[i]
       childPositions.push(childY)
       // レベル1ノードの場合はdirectionOverridesまたは既存のdirectionを取得
+      // 新規L1ノードの場合、兄弟の方向を継承
       const existingChildDirection =
         depth === 0
           ? (directionOverrides?.[child.id] ??
-            existingMetadata[child.id]?.direction)
+              existingMetadata[child.id]?.direction ??
+              findSiblingDirection(
+                item.children,
+                i,
+                directionOverrides,
+                existingMetadata,
+              ))
           : undefined
       const childHeight = layoutSubtree(
         child,
