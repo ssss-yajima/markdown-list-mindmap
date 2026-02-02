@@ -1,7 +1,11 @@
 import type { ListItem } from '../types/markdown'
-import type { NodeMetadata, LayoutDirection } from '../types/mindMap'
+import type {
+  NodeMetadata,
+  LayoutDirection,
+  LayoutConfig as UserLayoutConfig,
+} from '../types/mindMap'
 
-interface LayoutConfig {
+export interface FullLayoutConfig {
   nodeWidth: number
   nodeHeight: number
   horizontalGap: number
@@ -9,12 +13,28 @@ interface LayoutConfig {
   minVerticalGap: number
 }
 
-const DEFAULT_CONFIG: LayoutConfig = {
+const DEFAULT_CONFIG: FullLayoutConfig = {
   nodeWidth: 250, // CSSのmax-widthに合わせる（フォールバック用）
   nodeHeight: 40,
   horizontalGap: 10,
   verticalGap: 4,
   minVerticalGap: 4,
+}
+
+export const DEFAULT_LAYOUT_CONFIG: UserLayoutConfig = {
+  horizontalGap: DEFAULT_CONFIG.horizontalGap,
+}
+
+/**
+ * ユーザー設定を内部設定にマージする
+ */
+export function mergeLayoutConfig(
+  partial?: Partial<UserLayoutConfig>,
+): FullLayoutConfig {
+  return {
+    ...DEFAULT_CONFIG,
+    horizontalGap: partial?.horizontalGap ?? DEFAULT_CONFIG.horizontalGap,
+  }
 }
 
 // ノード幅の定数
@@ -76,7 +96,7 @@ function buildWidthMapFromItems(items: ListItem[]): Record<string, number> {
  * テキスト長に基づいてノード高さを推定
  * 日本語と英数字で文字幅を区別して計算
  */
-function estimateNodeHeight(text: string, config: LayoutConfig): number {
+function estimateNodeHeight(text: string, config: FullLayoutConfig): number {
   // ノード内部のテキスト表示幅を計算
   // - 左右パディング: 12px × 2 = 24px
   // - add-child-button: 20px + gap: 6px = 26px
@@ -193,7 +213,7 @@ function findSiblingDirection(
 export function calculateLayout(
   items: ListItem[],
   existingMetadata: Record<string, NodeMetadata>,
-  config: LayoutConfig = DEFAULT_CONFIG,
+  config: FullLayoutConfig = DEFAULT_CONFIG,
   directionOverrides?: Record<string, LayoutDirection>,
 ): Record<string, NodeMetadata> {
   const result: Record<string, NodeMetadata> = {}
@@ -425,7 +445,7 @@ export function calculateLayout(
 export function resolveOverlaps(
   metadata: Record<string, NodeMetadata>,
   contentMap: Record<string, string> = {},
-  config: LayoutConfig = DEFAULT_CONFIG,
+  config: FullLayoutConfig = DEFAULT_CONFIG,
   widthMap: Record<string, number> = {},
 ): Record<string, NodeMetadata> {
   const result = { ...metadata }
@@ -534,7 +554,7 @@ export function relayoutSubtree(
   newDirection: LayoutDirection,
   items: ListItem[],
   existingMetadata: Record<string, NodeMetadata>,
-  config: LayoutConfig = DEFAULT_CONFIG,
+  config: FullLayoutConfig = DEFAULT_CONFIG,
 ): Record<string, NodeMetadata> {
   const result = { ...existingMetadata }
 

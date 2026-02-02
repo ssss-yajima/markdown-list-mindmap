@@ -10,6 +10,7 @@ import {
   calculateLayout,
   resolveOverlaps,
   buildContentMapFromItems,
+  mergeLayoutConfig,
 } from '../../utils/layoutEngine'
 import { treeToMarkdown } from '../../utils/treeToMarkdown'
 
@@ -35,6 +36,7 @@ export function regenerateFromTree(
   const parsed: ParsedMarkdown = { items, rawText: markdown }
 
   const contentMap = buildContentMapFromItems(items)
+  const layoutConfig = mergeLayoutConfig(metadata.layoutConfig)
 
   // 既存のdirection情報を保持
   const directionOverrides: Record<string, LayoutDirection> = {}
@@ -49,12 +51,13 @@ export function regenerateFromTree(
         calculateLayout(
           items,
           metadata.nodeMetadata,
-          undefined,
+          layoutConfig,
           directionOverrides,
         ),
         contentMap,
+        layoutConfig,
       )
-    : calculateLayout(items, {}, undefined, directionOverrides)
+    : calculateLayout(items, {}, layoutConfig, directionOverrides)
 
   const updatedMetadata: MindMapMetadata = {
     ...metadata,

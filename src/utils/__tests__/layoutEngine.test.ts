@@ -4,6 +4,8 @@ import {
   calculateLayout,
   resolveOverlaps,
   relayoutSubtree,
+  mergeLayoutConfig,
+  DEFAULT_LAYOUT_CONFIG,
 } from '../layoutEngine'
 import type { ListItem } from '../../types/markdown'
 import type { NodeMetadata } from '../../types/mindMap'
@@ -268,5 +270,75 @@ describe('relayoutSubtree', () => {
     const result = relayoutSubtree('nonexistent', 'left', items, existing)
 
     expect(result).toEqual(existing)
+  })
+})
+
+describe('mergeLayoutConfig', () => {
+  it('デフォルト値を返す（引数なし）', () => {
+    const config = mergeLayoutConfig()
+    expect(config.horizontalGap).toBe(DEFAULT_LAYOUT_CONFIG.horizontalGap)
+    expect(config.nodeWidth).toBe(250)
+    expect(config.nodeHeight).toBe(40)
+  })
+
+  it('部分的な設定をマージする', () => {
+    const config = mergeLayoutConfig({ horizontalGap: 50 })
+    expect(config.horizontalGap).toBe(50)
+    expect(config.nodeWidth).toBe(250)
+  })
+
+  it('undefinedを渡すとデフォルト値を返す', () => {
+    const config = mergeLayoutConfig(undefined)
+    expect(config.horizontalGap).toBe(DEFAULT_LAYOUT_CONFIG.horizontalGap)
+  })
+})
+
+describe('calculateLayout with custom horizontalGap', () => {
+  it('カスタムhorizontalGapでX座標が変わる', () => {
+    const items: ListItem[] = [
+      makeListItem('root', 'Root', 0, 1, [
+        makeListItem('child1', 'Child1', 1, 2),
+      ]),
+    ]
+
+    const config30 = mergeLayoutConfig({ horizontalGap: 30 })
+    const config60 = mergeLayoutConfig({ horizontalGap: 60 })
+
+    const result30 = calculateLayout(items, {}, config30)
+    const result60 = calculateLayout(items, {}, config60)
+
+    // horizontalGapが大きいほどX座標の差が大きくなる
+    const xDiff30 = result30.child1.position.x - result30.root.position.x
+    const xDiff60 = result60.child1.position.x - result60.root.position.x
+
+    expect(xDiff60).toBeGreaterThan(xDiff30)
+  })
+
+  it('horizontalGap 10でレイアウトが正しく計算される', () => {
+    const items: ListItem[] = [
+      makeListItem('root', 'Root', 0, 1, [
+        makeListItem('child1', 'Child1', 1, 2),
+      ]),
+    ]
+
+    const config = mergeLayoutConfig({ horizontalGap: 10 })
+    const result = calculateLayout(items, {}, config)
+
+    // nodeWidth(250) + horizontalGap(10) = 260
+    expect(result.child1.position.x).toBe(260)
+  })
+
+  it('horizontalGap 100でレイアウトが正しく計算される', () => {
+    const items: ListItem[] = [
+      makeListItem('root', 'Root', 0, 1, [
+        makeListItem('child1', 'Child1', 1, 2),
+      ]),
+    ]
+
+    const config = mergeLayoutConfig({ horizontalGap: 100 })
+    const result = calculateLayout(items, {}, config)
+
+    // nodeWidth(250) + horizontalGap(100) = 350
+    expect(result.child1.position.x).toBe(350)
   })
 })

@@ -6,6 +6,13 @@ import type { Node, Edge, XYPosition } from '@xyflow/react'
 export type LayoutDirection = 'left' | 'right'
 
 /**
+ * レイアウト設定（ファイルごとに保持）
+ */
+export interface LayoutConfig {
+  horizontalGap: number
+}
+
+/**
  * ノードのメタデータ（位置情報など）
  */
 export interface NodeMetadata {
@@ -27,6 +34,7 @@ export interface MindMapMetadata {
     zoom: number
   }
   lastModified: number
+  layoutConfig?: LayoutConfig
 }
 
 /**

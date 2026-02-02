@@ -8,6 +8,7 @@ import {
   resolveOverlaps,
   buildContentMapFromItems,
   relayoutSubtree,
+  mergeLayoutConfig,
 } from '../../utils/layoutEngine'
 
 /**
@@ -55,6 +56,7 @@ export function createLayoutSlice(set: SetState, get: GetState): LayoutSlice {
       if (!parsed) return
 
       const contentMap = buildContentMapFromItems(parsed.items)
+      const layoutConfig = mergeLayoutConfig(metadata.layoutConfig)
 
       // ドラッグされたノードのレベルを判定
       const draggedItem = findItem(parsed.items, nodeId)
@@ -94,6 +96,7 @@ export function createLayoutSlice(set: SetState, get: GetState): LayoutSlice {
                   direction: newDirection,
                 },
               },
+              layoutConfig,
             )
           } else {
             // 方向が変わらない場合は通常の位置更新
@@ -109,6 +112,7 @@ export function createLayoutSlice(set: SetState, get: GetState): LayoutSlice {
                 },
               },
               contentMap,
+              layoutConfig,
             )
           }
         } else {
@@ -124,6 +128,7 @@ export function createLayoutSlice(set: SetState, get: GetState): LayoutSlice {
               },
             },
             contentMap,
+            layoutConfig,
           )
         }
       } else {
@@ -139,6 +144,7 @@ export function createLayoutSlice(set: SetState, get: GetState): LayoutSlice {
             },
           },
           contentMap,
+          layoutConfig,
         )
       }
 
@@ -164,6 +170,7 @@ export function createLayoutSlice(set: SetState, get: GetState): LayoutSlice {
       if (!parsed || updates.length === 0) return
 
       const contentMap = buildContentMapFromItems(parsed.items)
+      const layoutConfig = mergeLayoutConfig(metadata.layoutConfig)
 
       let updatedNodeMetadata = { ...metadata.nodeMetadata }
       for (const { id, position } of updates) {
@@ -191,6 +198,7 @@ export function createLayoutSlice(set: SetState, get: GetState): LayoutSlice {
                 newDirection,
                 parsed.items,
                 updatedNodeMetadata,
+                layoutConfig,
               )
             }
           } else {
@@ -211,7 +219,11 @@ export function createLayoutSlice(set: SetState, get: GetState): LayoutSlice {
         }
       }
 
-      updatedNodeMetadata = resolveOverlaps(updatedNodeMetadata, contentMap)
+      updatedNodeMetadata = resolveOverlaps(
+        updatedNodeMetadata,
+        contentMap,
+        layoutConfig,
+      )
 
       const updatedMetadata: MindMapMetadata = {
         ...metadata,
@@ -279,10 +291,12 @@ export function createLayoutSlice(set: SetState, get: GetState): LayoutSlice {
         }
       }
 
+      const layoutConfig = mergeLayoutConfig(metadata.layoutConfig)
+
       const newNodeMetadata = calculateLayout(
         parsed.items,
         {},
-        undefined,
+        layoutConfig,
         directionOverrides,
       )
 

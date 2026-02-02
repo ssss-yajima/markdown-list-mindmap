@@ -1,10 +1,12 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import {
   useConfigStore,
   type BackgroundStyle,
   type NodeStyle,
   type FontStyle,
 } from '../../stores/configStore'
+import { useMindMapStore } from '../../stores/mindMapStore'
+import { DEFAULT_LAYOUT_CONFIG } from '../../utils/layoutEngine'
 import './ConfigMenu.css'
 
 export function ConfigMenu() {
@@ -21,6 +23,41 @@ export function ConfigMenu() {
     setFontStyle,
     setAutoCenterEnabled,
   } = useConfigStore()
+
+  const metadata = useMindMapStore((state) => state.metadata)
+  const setHorizontalGap = useMindMapStore((state) => state.setHorizontalGap)
+  const horizontalGap =
+    metadata.layoutConfig?.horizontalGap ?? DEFAULT_LAYOUT_CONFIG.horizontalGap
+
+  const handleGapChange = useCallback(
+    (delta: number) => {
+      setHorizontalGap(horizontalGap + delta)
+    },
+    [horizontalGap, setHorizontalGap],
+  )
+
+  const handleGapInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = Number.parseInt(e.target.value, 10)
+      if (!Number.isNaN(value)) {
+        setHorizontalGap(value)
+      }
+    },
+    [setHorizontalGap],
+  )
+
+  const handleGapKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        handleGapChange(10)
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        handleGapChange(-10)
+      }
+    },
+    [handleGapChange],
+  )
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -140,6 +177,39 @@ export function ConfigMenu() {
               />
               <span>Enable auto-centering</span>
             </label>
+          </div>
+
+          <div className="config-section">
+            <h3 className="config-section-title">Node Spacing</h3>
+            <div className="slider-control">
+              <button
+                type="button"
+                className="slider-button"
+                onClick={() => handleGapChange(-10)}
+                aria-label="Decrease horizontal gap"
+              >
+                −
+              </button>
+              <input
+                type="number"
+                className="slider-input"
+                value={horizontalGap}
+                onChange={handleGapInputChange}
+                onKeyDown={handleGapKeyDown}
+                min={10}
+                max={100}
+                step={10}
+                aria-label="Horizontal gap"
+              />
+              <button
+                type="button"
+                className="slider-button"
+                onClick={() => handleGapChange(10)}
+                aria-label="Increase horizontal gap"
+              >
+                +
+              </button>
+            </div>
           </div>
         </div>
       )}

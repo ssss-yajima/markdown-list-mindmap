@@ -75,3 +75,68 @@
 .config-option span {
   user-select: none;
 }
+
+.config-option input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--color-border-dark);
+}
+
+.slider-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slider-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-light);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  transition: all 0.15s ease;
+}
+
+.slider-button:hover {
+  background: var(--color-border-light);
+}
+
+.slider-button:active {
+  transform: scale(0.95);
+}
+
+.slider-input {
+  width: 50px;
+  height: 28px;
+  padding: 0 6px;
+  text-align: center;
+  border: 1px solid var(--color-border-light);
+  border-radius: 4px;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  background: var(--color-bg-white);
+}
+
+.slider-input:focus {
+  outline: none;
+  border-color: var(--color-border-dark);
+}
+
+/* Hide number input spinners */
+.slider-input::-webkit-outer-spin-button,
+.slider-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.slider-input[type="number"] {
+  -moz-appearance: textfield;
+}

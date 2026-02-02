@@ -6,3 +6,7 @@ export { createLayoutSlice, type LayoutSlice } from './layoutSlice'
 export { createFileSlice, type FileSlice } from './fileSlice'
 export { createMarkdownSlice, type MarkdownSlice } from './markdownSlice'
 export { createViewportSlice, type ViewportSlice } from './viewportSlice'
+export {
+  createLayoutConfigSlice,
+  type LayoutConfigSlice,
+} from './layoutConfigSlice'

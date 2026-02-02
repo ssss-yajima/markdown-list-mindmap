@@ -6,7 +6,7 @@ import {
   syncMarkdownWithTree,
 } from '../../utils/markdownParser'
 import { treeToFlow } from '../../utils/treeToFlow'
-import { calculateLayout } from '../../utils/layoutEngine'
+import { calculateLayout, mergeLayoutConfig } from '../../utils/layoutEngine'
 import { treeToMarkdown } from '../../utils/treeToMarkdown'
 
 type SetState = (
@@ -66,10 +66,13 @@ export function createMarkdownSlice(
         }
       }
 
+      // Merge layout config from metadata
+      const layoutConfig = mergeLayoutConfig(metadata.layoutConfig)
+
       const updatedNodeMetadata = calculateLayout(
         parsed.items,
         isNewInput ? {} : metadata.nodeMetadata,
-        undefined,
+        layoutConfig,
         isNewInput ? undefined : directionOverrides,
       )
 

@@ -12,12 +12,15 @@ import {
   createFileSlice,
   createMarkdownSlice,
   createViewportSlice,
+  createLayoutConfigSlice,
   type NodeOperationsSlice,
   type LayoutSlice,
   type FileSlice,
   type MarkdownSlice,
   type ViewportSlice,
+  type LayoutConfigSlice,
 } from './slices'
+import { DEFAULT_LAYOUT_CONFIG } from '../utils/layoutEngine'
 
 // 状態の型定義
 interface MindMapStateBase {
@@ -39,13 +42,15 @@ export type MindMapState = MindMapStateBase &
   LayoutSlice &
   FileSlice &
   MarkdownSlice &
-  ViewportSlice
+  ViewportSlice &
+  LayoutConfigSlice
 
 const INITIAL_METADATA: MindMapMetadata = {
   version: 1,
   nodeMetadata: {},
   viewport: { x: 0, y: 0, zoom: 1 },
   lastModified: Date.now(),
+  layoutConfig: DEFAULT_LAYOUT_CONFIG,
 }
 
 export const SAMPLE_MARKDOWN = `- プロジェクト計画
@@ -78,6 +83,7 @@ export const useMindMapStore = create<MindMapState>((set, get) => ({
   ...createFileSlice(set, get, SAMPLE_MARKDOWN),
   ...createNodeOperationsSlice(set, get),
   ...createViewportSlice(set),
+  ...createLayoutConfigSlice(set, get),
 }))
 
 // 型エクスポート（外部使用向け）
