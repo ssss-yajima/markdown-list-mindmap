@@ -3,38 +3,62 @@ import {
   buildContentMapFromItems,
   calculateLayout,
   resolveOverlaps,
+  relayoutSubtree,
 } from '../layoutEngine'
 import type { ListItem } from '../../types/markdown'
 import type { NodeMetadata } from '../../types/mindMap'
 
+function makeListItem(
+  id: string,
+  text: string,
+  level: number,
+  lineNumber: number,
+  children: ListItem[] = [],
+): ListItem {
+  return { id, text, level, lineNumber, listType: 'unordered', children }
+}
+
 function makeItems(): ListItem[] {
   return [
-    {
-      id: 'root1',
-      text: 'Root',
-      level: 0,
-      lineNumber: 1,
-      listType: 'unordered',
-      children: [
-        {
-          id: 'child1',
-          text: 'Child1',
-          level: 1,
-          lineNumber: 2,
-          listType: 'unordered',
-          children: [],
-        },
-        {
-          id: 'child2',
-          text: 'Child2',
-          level: 1,
-          lineNumber: 3,
-          listType: 'unordered',
-          children: [],
-        },
-      ],
-    },
+    makeListItem('root1', 'Root', 0, 1, [
+      makeListItem('child1', 'Child1', 1, 2),
+      makeListItem('child2', 'Child2', 1, 3),
+    ]),
   ]
+}
+
+function makeItemsWithBranches(): ListItem[] {
+  return [
+    makeListItem('root', 'Root', 0, 1, [
+      makeListItem('branch1', 'Branch1', 1, 2, [
+        makeListItem('branch1-child', 'Branch1 Child', 2, 3),
+      ]),
+      makeListItem('branch2', 'Branch2', 1, 4),
+    ]),
+  ]
+}
+
+function makeBranchMetadata(): Record<string, NodeMetadata> {
+  return {
+    root: { id: 'root', position: { x: 0, y: 0 }, expanded: true },
+    branch1: {
+      id: 'branch1',
+      position: { x: 280, y: 0 },
+      expanded: true,
+      direction: 'right',
+    },
+    'branch1-child': {
+      id: 'branch1-child',
+      position: { x: 560, y: 0 },
+      expanded: true,
+    },
+    branch2: {
+      id: 'branch2',
+      position: { x: 280, y: 50 },
+      expanded: true,
+      direction: 'right',
+    },
+  }
 }
 
 describe('buildContentMapFromItems', () => {
@@ -52,32 +76,9 @@ describe('buildContentMapFromItems', () => {
 
   it('深いネストのノードも含む', () => {
     const items: ListItem[] = [
-      {
-        id: 'a',
-        text: 'A',
-        level: 0,
-        lineNumber: 1,
-        listType: 'unordered',
-        children: [
-          {
-            id: 'b',
-            text: 'B',
-            level: 1,
-            lineNumber: 2,
-            listType: 'unordered',
-            children: [
-              {
-                id: 'c',
-                text: 'C',
-                level: 2,
-                lineNumber: 3,
-                listType: 'unordered',
-                children: [],
-              },
-            ],
-          },
-        ],
-      },
+      makeListItem('a', 'A', 0, 1, [
+        makeListItem('b', 'B', 1, 2, [makeListItem('c', 'C', 2, 3)]),
+      ]),
     ]
     const map = buildContentMapFromItems(items)
     expect(Object.keys(map)).toHaveLength(3)
@@ -106,16 +107,7 @@ describe('calculateLayout', () => {
   })
 
   it('単一ノードの場合', () => {
-    const items: ListItem[] = [
-      {
-        id: 'single',
-        text: 'Single',
-        level: 0,
-        lineNumber: 1,
-        listType: 'unordered',
-        children: [],
-      },
-    ]
+    const items: ListItem[] = [makeListItem('single', 'Single', 0, 1)]
     const result = calculateLayout(items, {})
     expect(result.single).toBeDefined()
     expect(result.single.position.x).toBe(0)
@@ -172,5 +164,109 @@ describe('resolveOverlaps', () => {
     // 異なる階層なので位置は変わらない
     expect(result.a.position.y).toBe(0)
     expect(result.b.position.y).toBe(0)
+  })
+})
+
+describe('calculateLayout - direction handling', () => {
+  function makeItemsWithDirections(): ListItem[] {
+    return [
+      makeListItem('root', 'Root', 0, 1, [
+        makeListItem('left1', 'Left1', 1, 2, [
+          makeListItem('left1-child', 'Left1 Child', 2, 3),
+        ]),
+        makeListItem('right1', 'Right1', 1, 4),
+      ]),
+    ]
+  }
+
+  it('左向きノードは負のX座標を持つ', () => {
+    const items = makeItemsWithDirections()
+    const result = calculateLayout(items, {}, undefined, { left1: 'left' })
+
+    expect(result.left1.position.x).toBeLessThan(0)
+    expect(result.left1.direction).toBe('left')
+  })
+
+  it('右向きノードは正のX座標を持つ', () => {
+    const items = makeItemsWithDirections()
+    const result = calculateLayout(items, {}, undefined, { right1: 'right' })
+
+    expect(result.right1.position.x).toBeGreaterThan(0)
+  })
+
+  it('左向きサブツリーの子も負のX座標を持つ', () => {
+    const items = makeItemsWithDirections()
+    const result = calculateLayout(items, {}, undefined, { left1: 'left' })
+
+    expect(result['left1-child'].position.x).toBeLessThan(
+      result.left1.position.x,
+    )
+  })
+
+  it('既存メタデータのdirectionを保持する', () => {
+    const items = makeItemsWithDirections()
+    const existing: Record<string, NodeMetadata> = {
+      left1: {
+        id: 'left1',
+        position: { x: -280, y: 0 },
+        expanded: true,
+        direction: 'left',
+      },
+    }
+    const result = calculateLayout(items, existing)
+
+    expect(result.left1.direction).toBe('left')
+    expect(result.left1.position.x).toBe(-280)
+  })
+
+  it('ルートノードはdirectionを持たない', () => {
+    const items = makeItemsWithDirections()
+    const result = calculateLayout(items, {})
+
+    expect(result.root.direction).toBeUndefined()
+  })
+})
+
+describe('relayoutSubtree', () => {
+  it('指定ノードの方向を変更する', () => {
+    const items = makeItemsWithBranches()
+    const existing = makeBranchMetadata()
+
+    const result = relayoutSubtree('branch1', 'left', items, existing)
+
+    expect(result.branch1.direction).toBe('left')
+    expect(result.branch1.position.x).toBeLessThan(0)
+  })
+
+  it('サブツリー全体が新しい方向にレイアウトされる', () => {
+    const items = makeItemsWithBranches()
+    const existing = makeBranchMetadata()
+
+    const result = relayoutSubtree('branch1', 'left', items, existing)
+
+    expect(result.branch1.position.x).toBeLessThan(0)
+    expect(result['branch1-child'].position.x).toBeLessThan(
+      result.branch1.position.x,
+    )
+  })
+
+  it('他のブランチには影響しない', () => {
+    const items = makeItemsWithBranches()
+    const existing = makeBranchMetadata()
+
+    const result = relayoutSubtree('branch1', 'left', items, existing)
+
+    expect(result.branch2.position.x).toBeGreaterThan(0)
+  })
+
+  it('存在しないノードIDの場合は元のメタデータを返す', () => {
+    const items = makeItemsWithBranches()
+    const existing: Record<string, NodeMetadata> = {
+      root: { id: 'root', position: { x: 0, y: 0 }, expanded: true },
+    }
+
+    const result = relayoutSubtree('nonexistent', 'left', items, existing)
+
+    expect(result).toEqual(existing)
   })
 })

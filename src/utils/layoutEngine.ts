@@ -309,13 +309,13 @@ export function calculateLayout(
         const existingChildDirection =
           depth === 0
             ? (directionOverrides?.[child.id] ??
-                existingMetadata[child.id]?.direction ??
-                findSiblingDirection(
-                  item.children,
-                  i,
-                  directionOverrides,
-                  existingMetadata,
-                ))
+              existingMetadata[child.id]?.direction ??
+              findSiblingDirection(
+                item.children,
+                i,
+                directionOverrides,
+                existingMetadata,
+              ))
             : undefined
         const childHeight = layoutSubtree(
           child,
@@ -359,13 +359,13 @@ export function calculateLayout(
       const existingChildDirection =
         depth === 0
           ? (directionOverrides?.[child.id] ??
-              existingMetadata[child.id]?.direction ??
-              findSiblingDirection(
-                item.children,
-                i,
-                directionOverrides,
-                existingMetadata,
-              ))
+            existingMetadata[child.id]?.direction ??
+            findSiblingDirection(
+              item.children,
+              i,
+              directionOverrides,
+              existingMetadata,
+            ))
           : undefined
       const childHeight = layoutSubtree(
         child,

@@ -180,3 +180,148 @@ describe('syncMarkdownWithTree', () => {
     expect(result.markdownWithIds).toContain('<!-- id:')
   })
 })
+
+describe('parseMarkdown - irregular indent handling', () => {
+  it('3スペースインデントをレベル1として処理する', () => {
+    const md = '- Parent\n   - Child'
+    const result = parseMarkdown(md)
+    expect(result.items).toHaveLength(1)
+    expect(result.items[0].children).toHaveLength(1)
+    expect(result.items[0].children[0].level).toBe(1)
+  })
+
+  it('4スペースインデントをレベル2として処理する', () => {
+    const md = '- Parent\n    - Child'
+    const result = parseMarkdown(md)
+    expect(result.items[0].children[0].level).toBe(2)
+  })
+
+  it('混在インデント（スペースとタブ）を処理する', () => {
+    // タブは4スペースとして扱われるため、レベル2になる
+    const md = '- L0\n  - L1\n\t- TabL2'
+    const result = parseMarkdown(md)
+    expect(result.items).toHaveLength(1)
+    expect(result.items[0].children).toHaveLength(1)
+    // タブインデントの行はL1の子（L2）になる
+    expect(result.items[0].children[0].children).toHaveLength(1)
+    expect(result.items[0].children[0].children[0].text).toBe('TabL2')
+  })
+
+  it('アウトデント：深いレベルから浅いレベルに戻る', () => {
+    const md = '- L0\n  - L1\n    - L2\n  - L1again\n- L0again'
+    const result = parseMarkdown(md)
+
+    expect(result.items).toHaveLength(2)
+    expect(result.items[0].text).toBe('L0')
+    expect(result.items[0].children).toHaveLength(2)
+    expect(result.items[0].children[0].text).toBe('L1')
+    expect(result.items[0].children[0].children).toHaveLength(1)
+    expect(result.items[0].children[0].children[0].text).toBe('L2')
+    expect(result.items[0].children[1].text).toBe('L1again')
+    expect(result.items[1].text).toBe('L0again')
+  })
+
+  it('連続アウトデント（L3→L1→L0）', () => {
+    const md = '- L0\n  - L1\n    - L2\n      - L3\n  - BackToL1\n- BackToL0'
+    const result = parseMarkdown(md)
+
+    expect(result.items).toHaveLength(2)
+    expect(result.items[0].children).toHaveLength(2)
+    expect(result.items[0].children[0].children[0].children[0].text).toBe('L3')
+    expect(result.items[0].children[1].text).toBe('BackToL1')
+    expect(result.items[1].text).toBe('BackToL0')
+  })
+})
+
+describe('parseMarkdown - special characters in ID comments', () => {
+  // Note: 現在のID正規表現は英数字のみ [a-zA-Z0-9]+ をサポート
+  // ハイフンやアンダースコアを含むIDは認識されない（新規IDが生成される）
+
+  it('ハイフンを含むIDは認識されず新規IDが生成される', () => {
+    const md = '- Item <!-- id:abc-def-123 -->'
+    const result = parseMarkdown(md)
+    // ハイフンを含むIDは正規表現にマッチしないため新規IDが生成される
+    expect(result.items[0].id).toMatch(/^[a-z0-9]{8}$/)
+    expect(result.items[0].id).not.toBe('abc-def-123')
+  })
+
+  it('アンダースコアを含むIDは認識されず新規IDが生成される', () => {
+    const md = '- Item <!-- id:abc_def_123 -->'
+    const result = parseMarkdown(md)
+    // アンダースコアを含むIDは正規表現にマッチしないため新規IDが生成される
+    expect(result.items[0].id).toMatch(/^[a-z0-9]{8}$/)
+    expect(result.items[0].id).not.toBe('abc_def_123')
+  })
+
+  it('英数字のみのIDを正しくパースする', () => {
+    const md = '- Item <!-- id:AbCdEf123 -->'
+    const result = parseMarkdown(md)
+    expect(result.items[0].id).toBe('AbCdEf123')
+  })
+
+  it('テキスト内に特殊文字がある場合も正しくパースする', () => {
+    const md = '- Item with <brackets> & special chars <!-- id:test123 -->'
+    const result = parseMarkdown(md)
+    expect(result.items[0].id).toBe('test123')
+    expect(result.items[0].text).toBe('Item with <brackets> & special chars')
+  })
+
+  it('複数のHTMLコメントがある場合、最後のIDコメントを使用', () => {
+    const md = '- Item <!-- comment --> text <!-- id:correct -->'
+    const result = parseMarkdown(md)
+    expect(result.items[0].id).toBe('correct')
+  })
+
+  it('IDコメント前後の空白を正しく処理する', () => {
+    const md = '- Item   <!-- id:test123 -->  '
+    const result = parseMarkdown(md)
+    expect(result.items[0].id).toBe('test123')
+    expect(result.items[0].text).toBe('Item')
+  })
+})
+
+describe('parseMarkdown - empty and edge cases', () => {
+  // Note: 現在の正規表現 /^(\s*)([-*+]|\d+\.)\s+(.+)$/ はテキストが空の行にマッチしない
+  // (.+) は1文字以上を要求するため
+
+  it('リスト項目のテキストが空の場合は無視される', () => {
+    const md = '- \n- Item2'
+    const result = parseMarkdown(md)
+    // 空のリスト項目は正規表現にマッチしないため無視される
+    expect(result.items).toHaveLength(1)
+    expect(result.items[0].text).toBe('Item2')
+  })
+
+  it('単一のリスト項目', () => {
+    const md = '- Single'
+    const result = parseMarkdown(md)
+    expect(result.items).toHaveLength(1)
+    expect(result.items[0].text).toBe('Single')
+    expect(result.items[0].children).toHaveLength(0)
+  })
+
+  it('空行を含むマークダウン', () => {
+    const md = '- Item1\n\n- Item2\n\n  - Child'
+    const result = parseMarkdown(md)
+    expect(result.items).toHaveLength(2)
+    expect(result.items[1].children).toHaveLength(1)
+  })
+
+  it('非リスト行のみの場合は空配列を返す', () => {
+    const md = '# Header\nSome text\n\nMore text'
+    const result = parseMarkdown(md)
+    expect(result.items).toHaveLength(0)
+  })
+
+  it('末尾の改行を正しく処理する', () => {
+    const md = '- Item1\n- Item2\n'
+    const result = parseMarkdown(md)
+    expect(result.items).toHaveLength(2)
+  })
+
+  it('連続した改行を正しく処理する', () => {
+    const md = '- Item1\n\n\n\n- Item2'
+    const result = parseMarkdown(md)
+    expect(result.items).toHaveLength(2)
+  })
+})
