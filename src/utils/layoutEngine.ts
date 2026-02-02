@@ -10,14 +10,67 @@ interface LayoutConfig {
 }
 
 const DEFAULT_CONFIG: LayoutConfig = {
-  nodeWidth: 250, // CSSのmax-widthに合わせる
+  nodeWidth: 250, // CSSのmax-widthに合わせる（フォールバック用）
   nodeHeight: 40,
-  horizontalGap: 30,
+  horizontalGap: 10,
   verticalGap: 4,
   minVerticalGap: 4,
 }
 
+// ノード幅の定数
+const MIN_NODE_WIDTH = 120 // CSSのmin-widthに合わせる
+const MAX_NODE_WIDTH = 250 // CSSのmax-widthに合わせる
+const HORIZONTAL_PADDING = 24 // 左右パディング: 12px × 2
+const BUTTON_SPACE = 52 // add-child-button(20px) + expand-button(20px) + gaps(6px × 2)
+const BUTTON_SPACE_NO_CHILDREN = 26 // add-child-buttonのみ
+// 文字幅の推定値（保守的に大きめに設定）
+// level-0: font-size 16px, font-weight 600 を考慮
+const CJK_CHAR_WIDTH = 18 // 日本語文字の推定幅
+const ASCII_CHAR_WIDTH = 10 // 英数字の推定幅
+const LAYOUT_MARGIN = 8 // レイアウト用の安全マージン
+
 const CJK_FULLWIDTH_REGEX = /[\u3000-\u9FFF\uFF00-\uFFEF]/
+
+/**
+ * テキスト長に基づいてノード幅を推定
+ * 日本語と英数字で文字幅を区別して計算
+ * 実際のCSS幅より大きめに見積もることでエッジの回り込みを防止
+ */
+function estimateNodeWidth(text: string, hasChildren: boolean): number {
+  // 文字幅を推定（保守的に大きめの値を使用）
+  let textWidth = 0
+  for (const char of text) {
+    if (CJK_FULLWIDTH_REGEX.test(char)) {
+      textWidth += CJK_CHAR_WIDTH
+    } else {
+      textWidth += ASCII_CHAR_WIDTH
+    }
+  }
+
+  const buttonSpace = hasChildren ? BUTTON_SPACE : BUTTON_SPACE_NO_CHILDREN
+  const totalWidth = textWidth + HORIZONTAL_PADDING + buttonSpace + LAYOUT_MARGIN
+
+  return Math.max(MIN_NODE_WIDTH, Math.min(MAX_NODE_WIDTH, totalWidth))
+}
+
+/**
+ * ListItemツリーから各ノードの推定幅マップを作成
+ */
+function buildWidthMapFromItems(items: ListItem[]): Record<string, number> {
+  const result: Record<string, number> = {}
+
+  function traverse(list: ListItem[]): void {
+    for (const item of list) {
+      result[item.id] = estimateNodeWidth(item.text, item.children.length > 0)
+      if (item.children.length > 0) {
+        traverse(item.children)
+      }
+    }
+  }
+
+  traverse(items)
+  return result
+}
 
 /**
  * テキスト長に基づいてノード高さを推定
@@ -95,33 +148,15 @@ function boxesOverlap(a: BoundingBox, b: BoundingBox, margin = 0): boolean {
 function createBox(
   x: number,
   y: number,
-  config: LayoutConfig,
-  height?: number,
+  width: number,
+  height: number,
 ): BoundingBox {
   return {
     x,
     y,
-    width: config.nodeWidth,
-    height: height ?? config.nodeHeight,
+    width,
+    height,
   }
-}
-
-/**
- * X座標を計算（方向対応）
- */
-function calculateX(
-  depth: number,
-  direction: LayoutDirection,
-  config: LayoutConfig,
-): number {
-  if (depth === 0) {
-    return 0
-  }
-  if (direction === 'right') {
-    return depth * (config.nodeWidth + config.horizontalGap)
-  }
-  // left: 負の方向に展開
-  return -depth * (config.nodeWidth + config.horizontalGap)
 }
 
 export function calculateLayout(
@@ -132,6 +167,9 @@ export function calculateLayout(
 ): Record<string, NodeMetadata> {
   const result: Record<string, NodeMetadata> = {}
   const placedBoxes: { id: string; box: BoundingBox }[] = []
+
+  // 全ノードの幅を事前計算
+  const widthMap = buildWidthMapFromItems(items)
 
   /**
    * サブツリーの高さを計算
@@ -154,9 +192,10 @@ export function calculateLayout(
     x: number,
     preferredY: number,
     nodeId: string,
+    nodeWidth: number,
     nodeHeight: number,
   ): number {
-    const box = createBox(x, preferredY, config, nodeHeight)
+    const box = createBox(x, preferredY, nodeWidth, nodeHeight)
     let adjustedY = preferredY
     let iterations = 0
     const maxIterations = 100
@@ -186,15 +225,30 @@ export function calculateLayout(
 
   /**
    * サブツリーをレイアウト（方向対応）
+   * parentX, parentWidth: 親ノードの位置と幅（動的幅計算用）
    */
   function layoutSubtree(
     item: ListItem,
     depth: number,
     startY: number,
     direction: LayoutDirection,
+    parentX: number,
+    parentWidth: number,
   ): number {
-    const x = calculateX(depth, direction, config)
+    const nodeWidth = widthMap[item.id] ?? config.nodeWidth
     const nodeHeight = estimateNodeHeight(item.text, config)
+    const isRoot = depth === 0
+
+    // X座標を計算
+    let x: number
+    if (isRoot) {
+      x = 0
+    } else if (direction === 'right') {
+      x = parentX + parentWidth + config.horizontalGap
+    } else {
+      // left: 自分の右端が親の左端に接するように配置
+      x = parentX - config.horizontalGap - nodeWidth
+    }
 
     // 既存の位置があれば使用（ユーザーがドラッグした位置を保持）
     const existing = existingMetadata[item.id]
@@ -209,7 +263,7 @@ export function calculateLayout(
         box: createBox(
           existing.position.x,
           existing.position.y,
-          config,
+          nodeWidth,
           nodeHeight,
         ),
       })
@@ -229,6 +283,8 @@ export function calculateLayout(
           depth + 1,
           childY,
           existingChildDirection ?? childDirection,
+          existing.position.x,
+          nodeWidth,
         )
         childY += childHeight + config.verticalGap
       }
@@ -236,7 +292,7 @@ export function calculateLayout(
     }
 
     if (item.children.length === 0) {
-      const finalY = findNonOverlappingY(x, startY, item.id, nodeHeight)
+      const finalY = findNonOverlappingY(x, startY, item.id, nodeWidth, nodeHeight)
       result[item.id] = {
         id: item.id,
         position: { x, y: finalY },
@@ -245,7 +301,7 @@ export function calculateLayout(
       }
       placedBoxes.push({
         id: item.id,
-        box: createBox(x, finalY, config, nodeHeight),
+        box: createBox(x, finalY, nodeWidth, nodeHeight),
       })
       return nodeHeight
     }
@@ -269,6 +325,8 @@ export function calculateLayout(
         depth + 1,
         childY,
         existingChildDirection ?? childDirection,
+        x,
+        nodeWidth,
       )
       childY += childHeight + config.verticalGap
     }
@@ -282,7 +340,7 @@ export function calculateLayout(
       lastChildMeta?.position.y ?? childPositions[childPositions.length - 1]
     const centerY = (firstChildY + lastChildY) / 2
 
-    const finalY = findNonOverlappingY(x, centerY, item.id, nodeHeight)
+    const finalY = findNonOverlappingY(x, centerY, item.id, nodeWidth, nodeHeight)
 
     result[item.id] = {
       id: item.id,
@@ -292,7 +350,7 @@ export function calculateLayout(
     }
     placedBoxes.push({
       id: item.id,
-      box: createBox(x, finalY, config, nodeHeight),
+      box: createBox(x, finalY, nodeWidth, nodeHeight),
     })
 
     return childY - startY - config.verticalGap
@@ -301,13 +359,14 @@ export function calculateLayout(
   let currentY = 0
 
   for (const item of items) {
-    const height = layoutSubtree(item, 0, currentY, 'right')
+    const rootWidth = widthMap[item.id] ?? config.nodeWidth
+    const height = layoutSubtree(item, 0, currentY, 'right', 0, rootWidth)
     currentY += height + config.verticalGap * 2
   }
 
   // 最終的な衝突解消パスを実行
   const contentMap = buildContentMapFromItems(items)
-  const resolved = resolveOverlaps(result, contentMap, config)
+  const resolved = resolveOverlaps(result, contentMap, config, widthMap)
   return resolved
 }
 
@@ -320,15 +379,20 @@ export function resolveOverlaps(
   metadata: Record<string, NodeMetadata>,
   contentMap: Record<string, string> = {},
   config: LayoutConfig = DEFAULT_CONFIG,
+  widthMap: Record<string, number> = {},
 ): Record<string, NodeMetadata> {
   const result = { ...metadata }
   const entries = Object.entries(result)
 
-  // 各ノードの高さを計算
+  // 各ノードの高さと幅を計算
   const heightMap: Record<string, number> = {}
+  const effectiveWidthMap: Record<string, number> = {}
   for (const [id] of entries) {
     const text = contentMap[id] ?? ''
     heightMap[id] = estimateNodeHeight(text, config)
+    // widthMapに値があればそれを使用、なければテキストから推定
+    effectiveWidthMap[id] =
+      widthMap[id] ?? estimateNodeWidth(text, false) // 子の有無は保守的にfalse
   }
 
   // 左側と右側に分離
@@ -347,10 +411,6 @@ export function resolveOverlaps(
     let iterations = 0
     const maxIterations = 50
 
-    // 同一深度（X座標が近い）のノード間のみ衝突をチェック
-    // 階層間隔（nodeWidth + horizontalGap）に合わせて設定
-    const xTolerance = config.nodeWidth + config.horizontalGap
-
     while (hasChanges && iterations < maxIterations) {
       hasChanges = false
 
@@ -361,23 +421,29 @@ export function resolveOverlaps(
 
           if (!metaA.position || !metaB.position) continue
 
-          // 同一階層のノードのみ衝突チェック
-          const sameDepth =
-            Math.abs(metaA.position.x - metaB.position.x) < xTolerance
-          if (!sameDepth) continue
-
+          const widthA = effectiveWidthMap[idA]
+          const widthB = effectiveWidthMap[idB]
           const heightA = heightMap[idA]
           const heightB = heightMap[idB]
+
+          // X座標範囲が重なっているかで同一深度を判定
+          const aLeft = metaA.position.x
+          const aRight = aLeft + widthA
+          const bLeft = metaB.position.x
+          const bRight = bLeft + widthB
+          const xOverlap = !(aRight < bLeft || bRight < aLeft)
+          if (!xOverlap) continue
+
           const boxA = createBox(
             metaA.position.x,
             metaA.position.y,
-            config,
+            widthA,
             heightA,
           )
           const boxB = createBox(
             metaB.position.x,
             metaB.position.y,
-            config,
+            widthB,
             heightB,
           )
 
