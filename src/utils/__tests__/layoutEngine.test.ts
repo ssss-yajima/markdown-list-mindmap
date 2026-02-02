@@ -324,8 +324,9 @@ describe('calculateLayout with custom horizontalGap', () => {
     const config = mergeLayoutConfig({ horizontalGap: 10 })
     const result = calculateLayout(items, {}, config)
 
-    // nodeWidth(250) + horizontalGap(10) = 260
-    expect(result.child1.position.x).toBe(260)
+    // 動的ノード幅: Root(子あり) = 4*10 + 24 + 52 + 8 = 124px
+    // child1.x = rootWidth(124) + horizontalGap(10) = 134
+    expect(result.child1.position.x).toBe(134)
   })
 
   it('horizontalGap 100でレイアウトが正しく計算される', () => {
@@ -338,7 +339,8 @@ describe('calculateLayout with custom horizontalGap', () => {
     const config = mergeLayoutConfig({ horizontalGap: 100 })
     const result = calculateLayout(items, {}, config)
 
-    // nodeWidth(250) + horizontalGap(100) = 350
-    expect(result.child1.position.x).toBe(350)
+    // 動的ノード幅: Root(子あり) = 4*10 + 24 + 52 + 8 = 124px
+    // child1.x = rootWidth(124) + horizontalGap(100) = 224
+    expect(result.child1.position.x).toBe(224)
   })
 })
