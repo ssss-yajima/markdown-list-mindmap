@@ -83,6 +83,10 @@ export function useMarkdownEditorKeyboard({
       const textarea = textareaRef.current
       if (!textarea) return
 
+      if (e.nativeEvent.isComposing) {
+        return
+      }
+
       const { selectionStart, selectionEnd } = textarea
 
       // Enter キー処理
